@@ -9,6 +9,10 @@
 #include "util/vectorbase.h"
 #include "DrawingUtilitiesClass.h"
 
+
+
+
+
 struct Point2D {
 	int x,y;
 };
@@ -18,6 +22,12 @@ using namespace GamePhysics;
 
 class Simulator{
 public:
+
+	enum Integrator {
+		Euler = 0,
+		MidPoint = 1
+	};
+
 	// Attributes
 	int m_iTestCase;
 	DrawingUtilitiesClass * DUC;

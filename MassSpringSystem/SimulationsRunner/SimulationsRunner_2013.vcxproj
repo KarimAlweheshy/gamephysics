@@ -208,7 +208,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Simulations\main.cpp" />
-    <ClCompile Include="MassSpringSystemSimulator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AntTweakBar\src\AntTweakBar_2013.vcxproj">
@@ -232,9 +231,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\SimulatorTester\SimulatorTester.vcxproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\Simulations\MassSpringSystemSimulator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

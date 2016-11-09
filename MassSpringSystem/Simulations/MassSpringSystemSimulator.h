@@ -1,6 +1,8 @@
 #ifndef MASSSPRINGSYSTEMSIMULATOR_h
 #define MASSSPRINGSYSTEMSIMULATOR_h
 #include "Simulator.h"
+#include "Spring.h"
+#include "MassPoint.h"
 
 // Do Not Change
 #define EULER 0
@@ -17,9 +19,12 @@ public:
 	// Functions
 	const char * getTestCasesStr();
 	void initUI(DrawingUtilitiesClass * DUC);
+	void SetupDemo1();
 	void reset();
+	void drawSingleSpringSystem();
 	void drawFrame(ID3D11DeviceContext* pd3dImmediateContext);
 	void notifyCaseChanged(int testCase);
+	void computeElasticForces(float timeElapsed);
 	void externalForcesCalculations(float timeElapsed);
 	void simulateTimestep(float timeStep);
 	void onClick(int x, int y);
@@ -29,8 +34,8 @@ public:
 	void setMass(float mass);
 	void setStiffness(float stiffness);
 	void setDampingFactor(float damping);
-	int addMassPoint(Vec3 position, Vec3 Velocity, bool isFixed);
-	void addSpring(int masspoint1, int masspoint2, float initialLength);
+	int addMassPoint(Vec3 position, Vec3 velocity, float mass, bool isFixed);
+	void addSpring(MassPoint masspoint1, MassPoint masspoint2, float initialLength, float relaxedLength, int stiffness);
 	int getNumberOfMassPoints();
 	int getNumberOfSprings();
 	Vec3 getPositionOfMassPoint(int index);

@@ -57,5 +57,9 @@ private:
 	Point2D m_mouse;
 	Point2D m_trackmouse;
 	Point2D m_oldtrackmouse;
+
+	//Private functions
+	void integrateMassPointsPositions(float timeStep);
+	void integratePositionsUsingEuler(float timeStep);
 };
 #endif

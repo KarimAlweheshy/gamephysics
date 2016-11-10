@@ -12,11 +12,13 @@ public:
 	// Members
 	std::vector<MassPoint> _MassPoints;
 	float _Stifness;
+	float _InitialLength;
 
 	// Functions
 	void calculateElasticForces();
 	float getCurrentLength();
-	
-private:
-	float _InitialLength;
+	Vec3 getInitialLengthVector();
+	Vec3 getCurrentLengthVector();
+	Vec3 getMassPoint1Acceleration();
+	Vec3 getMassPoint2Acceleration();
 };

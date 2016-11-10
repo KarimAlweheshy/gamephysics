@@ -7,18 +7,16 @@ class Spring
 {
 public:
 	// Constructor
-	Spring(MassPoint point1, MassPoint point2, float initialLength, float relaxedLength, int stiffness);
+	Spring(MassPoint point1, MassPoint point2, float initialLength, float stifness);
 	
 	// Members
 	std::vector<MassPoint> _MassPoints;
-	float _CurrentLength;
+	float _Stifness;
 
 	// Functions
 	void calculateElasticForces();
+	float getCurrentLength();
 	
 private:
-	float _RelaxedLength;
-	int _Stiffness;
-
+	float _InitialLength;
 };
-

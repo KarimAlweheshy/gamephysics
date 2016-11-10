@@ -32,10 +32,13 @@ public:
 	// Specific Functions
 	void setIntegrator(int integrator);
 	void setMass(float mass);
+	// Uniform stiffness to all springs
 	void setStiffness(float stiffness);
 	void setDampingFactor(float damping);
+	// Adds a point to the system
 	int addMassPoint(Vec3 position, Vec3 velocity, float mass, bool isFixed);
-	void addSpring(MassPoint masspoint1, MassPoint masspoint2, float initialLength, float relaxedLength, int stiffness);
+	// Adds a spring between the points of indexes masspoint1 and masspoint2 from the added MassPoints array
+	void addSpring(uint16_t masspoint1, uint16_t masspoint2, float initialLength);
 	int getNumberOfMassPoints();
 	int getNumberOfSprings();
 	Vec3 getPositionOfMassPoint(int index);

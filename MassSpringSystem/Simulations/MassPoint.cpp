@@ -38,7 +38,3 @@ void MassPoint::integrateVelocity(float timeStep, int integrationMethod)
 		}
 	}
 }
-
-
-
-

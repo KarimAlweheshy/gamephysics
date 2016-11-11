@@ -19,6 +19,6 @@ public:
 	float getCurrentLength();
 	Vec3 getInitialLengthVector();
 	Vec3 getCurrentLengthVector();
+	Vec3 getMassPoint0Acceleration();
 	Vec3 getMassPoint1Acceleration();
-	Vec3 getMassPoint2Acceleration();
 };

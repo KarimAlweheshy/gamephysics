@@ -61,5 +61,6 @@ private:
 	//Private functions
 	void integrateMassPointsPositions(float timeStep);
 	void integratePositionsUsingEuler(float timeStep);
+	void oneStepCalculation(float timeStep);
 };
 #endif

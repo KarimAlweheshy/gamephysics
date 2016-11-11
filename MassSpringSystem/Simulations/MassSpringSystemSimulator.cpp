@@ -53,8 +53,8 @@ void MassSpringSystemSimulator::reset(){
 	m_trackmouse.x = m_trackmouse.y = 0;
 	m_oldtrackmouse.x = m_oldtrackmouse.y = 0;
 	m_externalForce = Vec3();
-	m_iIntegrator = 0;
-	m_fMass = 10;
+m_iIntegrator = 0;
+m_fMass = 10;
 }
 
 void MassSpringSystemSimulator::initUI(DrawingUtilitiesClass * DUC)
@@ -76,14 +76,13 @@ void MassSpringSystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateCont
 {
 	switch (m_iTestCase)
 	{
-		case 0:
-			simulateTimestep(0.001f);
-			drawSingleSpringSystem();
-			break;
+	case 0:
+		drawSingleSpringSystem();
+		break;
 
-		case 1: break;
-		case 2: break;
-		case 3: break;
+	case 1: break;
+	case 2: break;
+	case 3: break;
 	}
 }
 
@@ -92,8 +91,8 @@ void MassSpringSystemSimulator::SetupDemo1()
 	// add the 2 given mass points
 	m_fStiffness = 40;
 	addMassPoint(Vec3(0, 0, 0), Vec3(-1, 0, 0), 10, false);
-	addMassPoint(Vec3(0, .7, 0), Vec3(1, 0, 0), 10, false);
-	addSpring(0, 1, .6);
+	addMassPoint(Vec3(0, 2, 0), Vec3(1, 0, 0), 10, false);
+	addSpring(0, 1, 1);
 }
 
 // Call this function to update the rendering of demo1, make sure to calculate the next frame before this
@@ -101,7 +100,7 @@ void MassSpringSystemSimulator::drawSingleSpringSystem()
 {
 	std::mt19937 eng;
 	std::uniform_real_distribution<float> randCol(0.0f, 1.0f);
-	
+
 
 	// Draw Frame according to calculated new positions for the points
 	for (int i = 0; i < getNumberOfSprings(); i++)
@@ -127,7 +126,7 @@ void MassSpringSystemSimulator::notifyCaseChanged(int testCase) {
 }
 
 // TimeElapsed is the time step since last the last calculations
-void MassSpringSystemSimulator::externalForcesCalculations(float timeElapsed) 
+void MassSpringSystemSimulator::externalForcesCalculations(float timeElapsed)
 {
 	// calculate external acceleration (mouse input / gravity / etc.) here
 }
@@ -142,7 +141,7 @@ void MassSpringSystemSimulator::addSpring(uint16_t masspoint1, uint16_t masspoin
 	}
 }
 
-void MassSpringSystemSimulator::simulateTimestep(float timeStep) 
+void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 {
 	/* basic principle:
 	1. calculate external & spring forces -> get acceleration
@@ -151,48 +150,34 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 	*/
 
 	externalForcesCalculations(timeStep);
-	for (int i = 0; i < getNumberOfSprings(); i++)
-	{
-		massSpringSystem.springs[i].calculateElasticForces();
-	}
-	integrateMassPointsPositions(timeStep);
-}
 
-void MassSpringSystemSimulator::integrateMassPointsPositions(float timeStep) {
 	switch (m_iIntegrator)
 	{
 	case Simulator::Euler:
-		integratePositionsUsingEuler(timeStep);
+		oneStepCalculation(timeStep);
 		break;
 	case Simulator::MidPoint:
-		break;
-	default:
+		oneStepCalculation(timeStep / 2);
+		oneStepCalculation(timeStep / 2);
 		break;
 	}
+
+	//integrateMassPointsPositions(timeStep);
 }
 
-void MassSpringSystemSimulator::integratePositionsUsingEuler(float timeStep) {
-	MassSpringSystem newMassSpringSystem = MassSpringSystem();
-	for (uint16_t i = 0; i < massSpringSystem.springs.size(); i++) {
-		Vec3 massPoint1NewVelocity, massPoint2NewVelocity, massPoint1NewPosition, massPoint2NewPosition;
+void MassSpringSystemSimulator::oneStepCalculation(float timeStep)
+{
+	for (int i = 0; i < getNumberOfSprings(); i++)
+	{
+		Vec3 oldAcc1 = massSpringSystem.springs[i].getMassPoint0Acceleration();
+		Vec3 oldAcc2 = massSpringSystem.springs[i].getMassPoint1Acceleration();
 
-		Spring oldSpring = massSpringSystem.springs[i];
-		MassPoint oldMassPoint1 = oldSpring._MassPoints[0];
-		MassPoint oldMassPoint2 = oldSpring._MassPoints[1];
-
-		massPoint1NewVelocity = oldMassPoint1._Velocity + oldSpring.getMassPoint1Acceleration() * timeStep;
-		massPoint2NewVelocity = oldMassPoint2._Velocity + oldSpring.getMassPoint2Acceleration() * timeStep;
-		massPoint1NewPosition = oldMassPoint1._Position + massSpringSystem.springs[i]._MassPoints[0]._Velocity * timeStep;
-		massPoint2NewPosition = oldMassPoint2._Position + massSpringSystem.springs[i]._MassPoints[1]._Velocity * timeStep;
-
-		MassPoint newMassPoint1 = MassPoint(massPoint1NewPosition, massPoint1NewVelocity, oldMassPoint1._Mass, oldMassPoint1._IsFixed);
-		MassPoint newMassPoint2 = MassPoint(massPoint2NewPosition, massPoint2NewVelocity, oldMassPoint2._Mass, oldMassPoint2._IsFixed); 
-		Spring newSpring = Spring(newMassPoint1, newMassPoint2, oldSpring._InitialLength, oldSpring._Stifness);
-		newMassSpringSystem.massPoints.push_back(newMassPoint1);
-		newMassSpringSystem.massPoints.push_back(newMassPoint2);
-		newMassSpringSystem.springs.push_back(newSpring);
+		massSpringSystem.springs[i].calculateElasticForces();
+		massSpringSystem.springs[i]._MassPoints[0].integratePositions(timeStep, m_iIntegrator);
+		massSpringSystem.springs[i]._MassPoints[1].integratePositions(timeStep, m_iIntegrator);
+		massSpringSystem.springs[i]._MassPoints[0].integrateVelocity(timeStep, m_iIntegrator, oldAcc1);
+		massSpringSystem.springs[i]._MassPoints[1].integrateVelocity(timeStep, m_iIntegrator, oldAcc2);
 	}
-	massSpringSystem = newMassSpringSystem;
 }
 
 void MassSpringSystemSimulator::onClick(int x, int y) {

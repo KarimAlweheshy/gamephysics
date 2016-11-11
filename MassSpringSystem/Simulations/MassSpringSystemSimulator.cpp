@@ -167,10 +167,11 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 
 void MassSpringSystemSimulator::oneStepCalculation(float timeStep)
 {
+	Vec3 gravity = Vec3(0, -9.8, 0);
 	for (int i = 0; i < getNumberOfSprings(); i++)
 	{
-		Vec3 oldAcc1 = massSpringSystem.springs[i].getMassPoint0Acceleration();
-		Vec3 oldAcc2 = massSpringSystem.springs[i].getMassPoint1Acceleration();
+		Vec3 oldAcc1 = massSpringSystem.springs[i].getMassPoint0Acceleration() + gravity;
+		Vec3 oldAcc2 = massSpringSystem.springs[i].getMassPoint1Acceleration() + gravity;
 
 		massSpringSystem.springs[i].calculateElasticForces();
 		massSpringSystem.springs[i]._MassPoints[0].integratePositions(timeStep, m_iIntegrator);

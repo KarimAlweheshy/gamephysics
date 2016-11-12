@@ -29,8 +29,8 @@ public:
 
 struct MassSpringSystem {
 public:
+	vector<vector<float>> springsMatrix;
 	vector<MassPoint> massPoints;
-	vector<Spring> springs;
 	Vec3 externalForce;
 };
 
@@ -101,21 +101,31 @@ void MassSpringSystemSimulator::drawSingleSpringSystem()
 	std::mt19937 eng;
 	std::uniform_real_distribution<float> randCol(0.0f, 1.0f);
 
-
+	vector<vector<float>> tempSpringMap = massSpringSystem.springsMatrix;
 	// Draw Frame according to calculated new positions for the points
-	for (int i = 0; i < getNumberOfSprings(); i++)
+	for (uint16_t i = 0; i < tempSpringMap.size(); i++)
 	{
-		DUC->setUpLighting(Vec3(), 0.4*Vec3(1, 1, 1), 100, 0.6*Vec3(randCol(eng), randCol(eng), randCol(eng)));
+		for (uint16_t j = 0; j < tempSpringMap[i].size(); j++) {
+			if (tempSpringMap[i][j] != 0) {
+				Vec3 fistMassPointPosition = massSpringSystem.massPoints[i]._Position;
+				Vec3 secondMassPointPosition = massSpringSystem.massPoints[j]._Position;
 
-		// draw spring
-		DUC->beginLine();
-		DUC->drawLine(massSpringSystem.springs[i]._MassPoints[0]._Position, Vec3(randCol(eng), randCol(eng), randCol(eng)), massSpringSystem.springs[i]._MassPoints[1]._Position, Vec3(0, 255, 255));
-		DUC->endLine();
+				DUC->setUpLighting(Vec3(), 0.4*Vec3(1, 1, 1), 100, 0.6*Vec3(randCol(eng), randCol(eng), randCol(eng)));
 
-		// draw all points of spring
-		for (uint16_t j = 0; j < massSpringSystem.springs[i]._MassPoints.size(); j++) {
-			DUC->drawSphere(massSpringSystem.springs[i]._MassPoints[j]._Position, Vec3(0.02, 0.02, 0.02));
+				// draw spring
+				DUC->beginLine();
+				DUC->drawLine(fistMassPointPosition, Vec3(randCol(eng), randCol(eng), randCol(eng)), secondMassPointPosition, Vec3(0, 255, 255));
+				DUC->endLine();
+
+				// Avoid drawing lines twice ;)
+				tempSpringMap[j][i] = 0;
+			}
 		}
+	}
+
+	// draw all points of spring
+	for (uint16_t i = 0; i < massSpringSystem.massPoints.size(); i++) {
+		DUC->drawSphere(massSpringSystem.massPoints[i]._Position, Vec3(0.02, 0.02, 0.02));
 	}
 }
 
@@ -136,8 +146,8 @@ void MassSpringSystemSimulator::addSpring(uint16_t masspoint1, uint16_t masspoin
 	if (masspoint1 < massSpringSystem.massPoints.size() &&
 		masspoint2 < massSpringSystem.massPoints.size() &&
 		masspoint1 != masspoint2) {
-		Spring spring = Spring(massSpringSystem.massPoints[masspoint1], massSpringSystem.massPoints[masspoint2], initialLength, m_fStiffness);
-		massSpringSystem.springs.push_back(spring);
+		massSpringSystem.springsMatrix[masspoint1][masspoint2] = initialLength;
+		massSpringSystem.springsMatrix[masspoint2][masspoint1] = initialLength;
 	}
 }
 
@@ -167,18 +177,34 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 
 void MassSpringSystemSimulator::oneStepCalculation(float timeStep)
 {
+	vector<MassPoint> tempMassPoint = massSpringSystem.massPoints;
 	Vec3 gravity = Vec3(0, -9.8, 0);
-	for (int i = 0; i < getNumberOfSprings(); i++)
+	for (int i = 0; i < getNumberOfMassPoints(); i++)
 	{
-		Vec3 oldAcc1 = massSpringSystem.springs[i].getMassPoint0Acceleration() + gravity;
-		Vec3 oldAcc2 = massSpringSystem.springs[i].getMassPoint1Acceleration() + gravity;
+		Vec3 massPointAcceleration = gravity;
+		for (int j = 0; j < getNumberOfMassPoints(); j++) {
+			if (i != j && massSpringSystem.springsMatrix[i][j] != 0) {
+				massPointAcceleration += calculateAcceleration(i, j);
+			}
+		}
 
-		massSpringSystem.springs[i].calculateElasticForces();
-		massSpringSystem.springs[i]._MassPoints[0].integratePositions(timeStep, m_iIntegrator);
-		massSpringSystem.springs[i]._MassPoints[1].integratePositions(timeStep, m_iIntegrator);
-		massSpringSystem.springs[i]._MassPoints[0].integrateVelocity(timeStep, m_iIntegrator, oldAcc1);
-		massSpringSystem.springs[i]._MassPoints[1].integrateVelocity(timeStep, m_iIntegrator, oldAcc2);
+		tempMassPoint[i].integratePositions(timeStep, m_iIntegrator);
+		tempMassPoint[i].integrateVelocity(timeStep, m_iIntegrator, massPointAcceleration);
 	}
+	massSpringSystem.massPoints = tempMassPoint;
+}
+
+Vec3 MassSpringSystemSimulator::calculateAcceleration(uint16_t massPoint0Index, uint16_t massPoint1Index) {
+	// Calculate currentLength
+	MassPoint point1 = massSpringSystem.massPoints[massPoint0Index];
+	MassPoint point2 = massSpringSystem.massPoints[massPoint1Index];
+	float currentLength = (float)hypot(hypot(point1._Position.x - point1._Position.x, point1._Position.y - point2._Position.y), point1._Position.z - point2._Position.z);
+
+	Vec3 currentLengthVector = massSpringSystem.massPoints[massPoint1Index]._Position - massSpringSystem.massPoints[massPoint0Index]._Position;
+	float initialLength = massSpringSystem.springsMatrix[massPoint0Index][massPoint1Index];
+	Vec3 initialLengthVector = initialLength * (currentLengthVector / currentLength);
+
+	return - m_fStiffness * (currentLengthVector - initialLengthVector) / m_fMass;
 }
 
 void MassSpringSystemSimulator::onClick(int x, int y) {
@@ -197,7 +223,15 @@ void MassSpringSystemSimulator::setIntegrator(int integrator) {
 }
 
 int MassSpringSystemSimulator::getNumberOfSprings() {
-	return massSpringSystem.springs.size();
+	uint16_t numberOfSprings = 0;
+	for (uint16_t i = 0; i < massSpringSystem.springsMatrix.size(); i++) {
+		for (uint16_t j = 0; j < massSpringSystem.springsMatrix[i].size(); j++) {
+			if (massSpringSystem.springsMatrix[i][j] > 0) {
+				numberOfSprings++;
+			}
+		}
+	}
+	return numberOfSprings;
 }
 
 void MassSpringSystemSimulator::setMass(float mass) {
@@ -206,9 +240,6 @@ void MassSpringSystemSimulator::setMass(float mass) {
 
 void MassSpringSystemSimulator::setStiffness(float stiffness) {
 	m_fStiffness = stiffness;
-	for (uint16_t i = 0; i < massSpringSystem.springs.size(); i++) {
-		massSpringSystem.springs[i]._Stifness = stiffness;
-	}
 }
 
 void MassSpringSystemSimulator::setDampingFactor(float damping) {
@@ -218,6 +249,11 @@ void MassSpringSystemSimulator::setDampingFactor(float damping) {
 int MassSpringSystemSimulator::addMassPoint(Vec3 position, Vec3 velocity, float mass, bool isFixed) 
 {
 	MassPoint newMassPoint = MassPoint(position, velocity, mass, isFixed);
+	vector<float> newMassPointSpring = vector<float>(massSpringSystem.springsMatrix.size() + 1, 0.f);
+	for (uint16_t i = 0; i < massSpringSystem.springsMatrix.size(); i++) {
+		massSpringSystem.springsMatrix[i].push_back(0);
+	}
+	massSpringSystem.springsMatrix.push_back(newMassPointSpring);
 	massSpringSystem.massPoints.push_back(newMassPoint);
 	// I have no clue what should I return!! So I just return the index of the new added MassPoint
 	// It is not tested in the test cases of exercice 1 anyway :)

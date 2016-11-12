@@ -1,7 +1,6 @@
 #ifndef MASSSPRINGSYSTEMSIMULATOR_h
 #define MASSSPRINGSYSTEMSIMULATOR_h
 #include "Simulator.h"
-#include "Spring.h"
 #include "MassPoint.h"
 
 // Do Not Change
@@ -62,5 +61,6 @@ private:
 	void integrateMassPointsPositions(float timeStep);
 	void integratePositionsUsingEuler(float timeStep);
 	void oneStepCalculation(float timeStep);
+	Vec3 calculateAcceleration(uint16_t massPoint0Index, uint16_t massPoint1Index);
 };
 #endif

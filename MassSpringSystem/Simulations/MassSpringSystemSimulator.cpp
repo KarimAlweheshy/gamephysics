@@ -20,6 +20,11 @@ Demo prevDemo = DemoUnkown;
 Demo demo = Demo1;
 Vec3 gravity = Vec3(0, 0, 0);
 
+MassSpringSystemSimulator::MassSpringSystemSimulator() {
+	SetupDemo1();
+}
+
+
 const char * MassSpringSystemSimulator::getTestCasesStr(){
 	return "Euler,MidPoint";
 }
@@ -246,10 +251,12 @@ void MassSpringSystemSimulator::setIntegrator(int integrator) {
 
 int MassSpringSystemSimulator::getNumberOfSprings() {
 	uint16_t numberOfSprings = 0;
-	for (uint16_t i = 0; i < massSpringSystem.springsMatrix.size(); i++) {
-		for (uint16_t j = 0; j < massSpringSystem.springsMatrix[i].size(); j++) {
-			if (massSpringSystem.springsMatrix[i][j] > 0) {
+	vector<vector<float>> tempMassSpringMatrix = massSpringSystem.springsMatrix;
+	for (uint16_t i = 0; i < tempMassSpringMatrix.size(); i++) {
+		for (uint16_t j = 0; j < tempMassSpringMatrix[i].size(); j++) {
+			if (tempMassSpringMatrix[i][j] > 0) {
 				numberOfSprings++;
+				tempMassSpringMatrix[j][i] = 0;
 			}
 		}
 	}

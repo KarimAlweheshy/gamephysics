@@ -12,6 +12,9 @@
 
 class MassSpringSystemSimulator:public Simulator{
 public:
+	// Constructor
+	MassSpringSystemSimulator();
+
 	// Functions
 	const char * getTestCasesStr();
 	void initUI(DrawingUtilitiesClass * DUC);

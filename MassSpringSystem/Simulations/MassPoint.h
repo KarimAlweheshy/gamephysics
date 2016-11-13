@@ -15,8 +15,8 @@ public:
 	bool _IsFixed;
 
 	// Functions
-	void integratePositions(float timeStep, int integrationMethod);
-	void integrateVelocity(float timeStep, int integrationMethod, Vec3 acceleration);
+	void integratePositions(float timeStep);
+	void integrateVelocity(float timeStep, Vec3 acceleration);
 
 private:
 	// formula template y_1 = y_0 + h*x_0

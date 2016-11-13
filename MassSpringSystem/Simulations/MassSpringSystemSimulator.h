@@ -12,13 +12,9 @@
 
 class MassSpringSystemSimulator:public Simulator{
 public:
-	//Construtors
-	MassSpringSystemSimulator();
-	
 	// Functions
 	const char * getTestCasesStr();
 	void initUI(DrawingUtilitiesClass * DUC);
-	void SetupDemo1();
 	void reset();
 	void drawSingleSpringSystem();
 	void drawFrame(ID3D11DeviceContext* pd3dImmediateContext);
@@ -49,7 +45,6 @@ private:
 	float m_fMass;
 	float m_fStiffness;
 	float m_fDamping;
-	int m_iIntegrator;
 
 	// UI Attributes
 	Vec3 m_externalForce;
@@ -58,6 +53,10 @@ private:
 	Point2D m_oldtrackmouse;
 
 	//Private functions
+	void SetupDemo1();
+	void SetupDemo2();
+	void SetupDemo3();
+	void SetupDemo4();
 	void integrateMassPointsPositions(float timeStep);
 	void integratePositionsUsingEuler(float timeStep);
 	void oneStepCalculation(float timeStep);

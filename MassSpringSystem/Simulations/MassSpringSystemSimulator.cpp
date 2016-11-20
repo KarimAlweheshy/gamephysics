@@ -162,7 +162,9 @@ void MassSpringSystemSimulator::drawSingleSpringSystem()
 
 // Changing integrators from GIU
 void MassSpringSystemSimulator::notifyCaseChanged(int testCase) {
-	setIntegrator(testCase);
+	if (testCase == 1) {
+		SetupDemo1();
+	}
 }
 
 // TimeElapsed is the time step since last the last calculations

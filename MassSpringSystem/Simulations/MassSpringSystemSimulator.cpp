@@ -30,11 +30,11 @@ const char * MassSpringSystemSimulator::getTestCasesStr(){
 }
 
 void MassSpringSystemSimulator::reset(){
-	SetupDemo1();
 	m_mouse.x = m_mouse.y = 0;
 	m_trackmouse.x = m_trackmouse.y = 0;
 	m_oldtrackmouse.x = m_oldtrackmouse.y = 0;
 	m_externalForce = Vec3();
+	gravity = Vec3(0, 0, 0);
 }
 
 void MassSpringSystemSimulator::initUI(DrawingUtilitiesClass * DUC)
@@ -46,6 +46,7 @@ void MassSpringSystemSimulator::initUI(DrawingUtilitiesClass * DUC)
 void MassSpringSystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext)
 {
 	if (prevDemo != demo) {
+		reset();
 		switch (demo)
 		{
 		case Demo1:
@@ -69,11 +70,11 @@ void MassSpringSystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateCont
 void MassSpringSystemSimulator::SetupDemo1()
 {
 	// add the 2 given mass points
-	gravity = Vec3(0, 0, 0);
-	
+	setStiffness(40.f);
+	setMass(10.f);
 	massSpringSystem = MassSpringSystem();
 	addMassPoint(Vec3(0, 0, 0), Vec3(-1, 0, 0), 10, false);
-	addMassPoint(Vec3(0, 2, 0), Vec3(1, 0, 0), 10, true);
+	addMassPoint(Vec3(0, 2, 0), Vec3(1, 0, 0), 10, false);
 	addSpring(0, 1, 1);
 }
 void MassSpringSystemSimulator::SetupDemo2()
@@ -93,34 +94,36 @@ void MassSpringSystemSimulator::SetupDemo3()
 
 void MassSpringSystemSimulator::SetupDemo4()
 {
-	gravity = Vec3(0, -9.8, 0);
+	setStiffness(40.f);
+	setMass(10.f);
+	gravity = Vec3(0, 0, 0);
 	// add the 2 given mass points
 	massSpringSystem = MassSpringSystem();
-	addMassPoint(Vec3(2, 3, 5), Vec3(-1, 3, 2), 10, false);
-	addMassPoint(Vec3(6, 5, 1), Vec3(-1, -2, 5), 10, false);
-	addMassPoint(Vec3(5, 1, 2), Vec3(2, 2, -3), 10, false);
-	addMassPoint(Vec3(3, 2, 0), Vec3(4, 0, 1), 10, false);
-	addMassPoint(Vec3(2, 4, 6), Vec3(1, 0, 4), 10, false);
-	addMassPoint(Vec3(5, 5, 1), Vec3(2, -3, 0), 10, false);
-	addMassPoint(Vec3(1, 0, 0), Vec3(4, 2, 5), 10, false);
-	addMassPoint(Vec3(3, 1, 0), Vec3(-1, 0, -1), 10, false);
-	addMassPoint(Vec3(6, 1, 1), Vec3(-1, 3, -3), 10, false);
-	addMassPoint(Vec3(3, 2, 6), Vec3(2, -1, 2), 10, false);
-	addSpring(0, 1, 2);
-	addSpring(1, 3, 5);
-	addSpring(3, 5, 6);
+	addMassPoint(Vec3(0, 0, 0), Vec3(-0.1, 0.3, 0.2), 10, false);
+	addMassPoint(Vec3(0.4, 1, 0), Vec3(-.1, -.2, 0.5), 10, false);
+	addMassPoint(Vec3(0, 0.4, 1), Vec3(.2, .2, -.3), 10, false);
+	addMassPoint(Vec3(0.3, 0.2, 0), Vec3(.4, .0, .1), 10, false);
+	addMassPoint(Vec3(0.2, 0.4, 0.6), Vec3(.1, .0, .4), 10, false);
+	addMassPoint(Vec3(0.5, 0.5, 0.1), Vec3(.2, -.3, .0), 10, false);
+	addMassPoint(Vec3(0.1, 0, 0), Vec3(.4, .2, .5), 10, false);
+	addMassPoint(Vec3(0.3, 0.1, 0), Vec3(-.1, 0, -.1), 10, false);
+	addMassPoint(Vec3(0.6, 0.1, 0.1), Vec3(-.1, .3, -.3), 10, false);
+	addMassPoint(Vec3(0.3, 0.2, 0.6), Vec3(.2, -.1, .2), 10, false);
+	addSpring(0, 1, 1);
+	addSpring(1, 3, 0.5);
+	addSpring(3, 5, 0.8);
 	addSpring(5, 4, 1);
-	addSpring(4, 3, 6);
-	addSpring(3, 6, 4);
-	addSpring(6, 7, 2);
-	addSpring(7, 9, 8);
-	addSpring(9, 0, 4);
-	addSpring(0, 8, 6);
-	addSpring(8, 3, 1);
-	addSpring(3, 6, 2);
-	addSpring(6, 0, 4);
-	addSpring(0, 3, 7);
-	addSpring(3, 2, 1);
+	addSpring(4, 3, 0.6);
+	addSpring(3, 6, 0.4);
+	addSpring(6, 7, 0.2);
+	addSpring(7, 9, 0.8);
+	addSpring(9, 0, 0.4);
+	addSpring(0, 8, 0.6);
+	addSpring(8, 3, 0.1);
+	addSpring(3, 6, 0.2);
+	addSpring(6, 0, 0.4);
+	addSpring(0, 3, 0.7);
+	addSpring(3, 2, 0.1);
 }
 
 // Call this function to update the rendering of demo1, make sure to calculate the next frame before this
@@ -203,35 +206,43 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 void MassSpringSystemSimulator::oneStepCalculation(float timeStep)
 {
 	vector<MassPoint> tempMassPoint = massSpringSystem.massPoints;
+	vector<Vec3> accelerations;
+
 	for (int i = 0; i < getNumberOfMassPoints(); i++)
 	{
-		Vec3 massPointAcceleration = gravity;
+		accelerations.push_back(gravity);
 		for (int j = 0; j < getNumberOfMassPoints(); j++) {
 			if (i != j && massSpringSystem.springsMatrix[i][j] != 0) {
-				massPointAcceleration += calculateAcceleration(i, j);
+				accelerations[i] += calculateAcceleration(i, j);
 			}
 		}
-
-		tempMassPoint[i].integratePositions(timeStep);
-		tempMassPoint[i].integrateVelocity(timeStep, massPointAcceleration);
 	}
+
+	for (int i = 0; i < getNumberOfMassPoints(); i++)
+	{
+		tempMassPoint[i].integratePositions(timeStep);
+		checkCollisions(i);
+	}
+	for (int i = 0; i < getNumberOfMassPoints(); i++)
+		tempMassPoint[i].integrateVelocity(timeStep, accelerations[i]);
+
 	massSpringSystem.massPoints = tempMassPoint;
 }
 
+
+
 Vec3 MassSpringSystemSimulator::calculateAcceleration(uint16_t massPoint0Index, uint16_t massPoint1Index) {
+	
 	// Calculate currentLength
 	Vec3 point0Position = massSpringSystem.massPoints[massPoint0Index]._Position;
 	Vec3 point1Position = massSpringSystem.massPoints[massPoint1Index]._Position;
 	
-	float currentLength = (float)hypot(hypot(point0Position.x - point1Position.x, point0Position.y - point1Position.y), point0Position.z - point1Position.z);
-
-	Vec3 currentLengthVector = point1Position - point0Position;
-	
+	float currentLength = Utility::getVectorLength(point1Position - point0Position);
+	Vec3 currentLengthVector = Utility::getNormalizedVector(point1Position - point0Position);
 	float initialLength = massSpringSystem.springsMatrix[massPoint0Index][massPoint1Index];
-	Vec3 initialLengthVector = initialLength * (currentLengthVector / currentLength);
+	Vec3 acceleration = -m_fStiffness * (currentLength - initialLength) / m_fMass * Utility::getNormalizedVector(getPositionOfMassPoint(massPoint0Index) - getPositionOfMassPoint(massPoint1Index));
 
-	Vec3 acceleration = m_fStiffness * (currentLengthVector - initialLengthVector) / m_fMass;
-	return acceleration;
+	return acceleration;	
 }
 
 void MassSpringSystemSimulator::onClick(int x, int y) {
@@ -273,6 +284,16 @@ void MassSpringSystemSimulator::setStiffness(float stiffness) {
 
 void MassSpringSystemSimulator::setDampingFactor(float damping) {
 	m_fDamping = damping;
+}
+
+
+// if y position is < 0 -> reflect
+void MassSpringSystemSimulator::checkCollisions(uint16_t massPointId)
+{
+	Vec3 tmpPos = getPositionOfMassPoint(massPointId);
+	if (tmpPos.Y < 0.f)
+		massSpringSystem.massPoints[massPointId]._Position.y = 0.f - tmpPos.Y;
+
 }
 
 int MassSpringSystemSimulator::addMassPoint(Vec3 position, Vec3 velocity, float mass, bool isFixed) 

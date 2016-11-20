@@ -2,6 +2,7 @@
 #define MASSSPRINGSYSTEMSIMULATOR_h
 #include "Simulator.h"
 #include "MassPoint.h"
+#include "Utility.h"
 
 // Do Not Change
 #define EULER 0
@@ -64,5 +65,6 @@ private:
 	void integratePositionsUsingEuler(float timeStep);
 	void oneStepCalculation(float timeStep);
 	Vec3 calculateAcceleration(uint16_t massPoint0Index, uint16_t massPoint1Index);
+	void checkCollisions(uint16_t massPointId);
 };
 #endif

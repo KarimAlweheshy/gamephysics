@@ -63,8 +63,10 @@ private:
 	void SetupDemo4();
 	void integrateMassPointsPositions(float timeStep);
 	void integratePositionsUsingEuler(float timeStep);
-	void oneStepCalculation(float timeStep);
-	Vec3 calculateAcceleration(uint16_t massPoint0Index, uint16_t massPoint1Index);
+	vector<MassPoint> eulerStepCalculation(vector<MassPoint> masspoints, float timeStep);
+	vector<MassPoint> midpointCalculations(vector<MassPoint> oldMassPoints, vector<MassPoint> midPointMassPoints, float timeStep);
+	vector<Vec3> calculateAccelerations(vector<MassPoint> massPoints);
+	Vec3 calculateAcceleration(vector<MassPoint> massPoints, uint16_t massPoint0Index, uint16_t massPoint1Index);
 	void checkCollisions(uint16_t massPointId);
 };
 #endif

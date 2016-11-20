@@ -193,56 +193,74 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 
 	externalForcesCalculations(timeStep);
 
-	switch (m_iTestCase)
-	{
-	case Simulator::Euler:
-		oneStepCalculation(timeStep);
-		break;
-	case Simulator::MidPoint:
-		oneStepCalculation(timeStep / 2);
-		oneStepCalculation(timeStep / 2);
-		break;
+	if (m_iTestCase == EULER) {
+		massSpringSystem.massPoints = eulerStepCalculation(massSpringSystem.massPoints, timeStep);
+	}
+	else if (m_iTestCase == MIDPOINT) {
+		vector<MassPoint> halfSetpMassPoints = eulerStepCalculation(massSpringSystem.massPoints, timeStep / 2);
+		massSpringSystem.massPoints = midpointCalculations(massSpringSystem.massPoints, halfSetpMassPoints, timeStep);
 	}
 }
 
-void MassSpringSystemSimulator::oneStepCalculation(float timeStep)
+vector<MassPoint> MassSpringSystemSimulator::eulerStepCalculation(vector<MassPoint> massPoints, float timeStep)
 {
-	vector<MassPoint> tempMassPoint = massSpringSystem.massPoints;
-	vector<Vec3> accelerations;
-
-	for (int i = 0; i < getNumberOfMassPoints(); i++)
-	{
-		accelerations.push_back(gravity);
-		for (int j = 0; j < getNumberOfMassPoints(); j++) {
-			if (i != j && massSpringSystem.springsMatrix[i][j] != 0) {
-				accelerations[i] += calculateAcceleration(i, j);
-			}
-		}
-	}
+	vector<MassPoint> tempMassPoint = massPoints;
+	vector<Vec3> accelerations = calculateAccelerations(massPoints);
 
 	for (int i = 0; i < getNumberOfMassPoints(); i++)
 	{
 		tempMassPoint[i].integratePositions(timeStep);
 		checkCollisions(i);
 	}
-	for (int i = 0; i < getNumberOfMassPoints(); i++)
-		tempMassPoint[i].integrateVelocity(timeStep, accelerations[i]);
 
-	massSpringSystem.massPoints = tempMassPoint;
+	for (int i = 0; i < getNumberOfMassPoints(); i++) {
+		tempMassPoint[i].integrateVelocity(timeStep, accelerations[i]);
+	}
+	
+	return tempMassPoint;
 }
 
+vector<MassPoint> MassSpringSystemSimulator::midpointCalculations(vector<MassPoint> oldMassPoints, vector<MassPoint> midPointMassPoints, float timeStep) {
+	vector<MassPoint> newMassPoints = oldMassPoints;
+	vector<Vec3> midPointAccelerations = calculateAccelerations(midPointMassPoints);
 
+	for (int i = 0; i < getNumberOfMassPoints(); i++)
+	{
+		newMassPoints[i]._Position = oldMassPoints[i]._Position + (timeStep * midPointMassPoints[i]._Velocity);
+		checkCollisions(i);
+	}
+	for (int i = 0; i < getNumberOfMassPoints(); i++)
+	{
+		newMassPoints[i]._Velocity = oldMassPoints[i]._Velocity + (timeStep * midPointAccelerations[i]);
+	}
 
-Vec3 MassSpringSystemSimulator::calculateAcceleration(uint16_t massPoint0Index, uint16_t massPoint1Index) {
+	return newMassPoints;
+}
+
+vector<Vec3> MassSpringSystemSimulator::calculateAccelerations(vector<MassPoint> massPoints) {
+	vector<Vec3> accelerations = vector<Vec3>();
+	for (int i = 0; i < getNumberOfMassPoints(); i++)
+	{
+		accelerations.push_back(gravity);
+		for (int j = 0; j < massPoints.size(); j++) {
+			if (i != j && massSpringSystem.springsMatrix[i][j] != 0) {
+				accelerations[i] += calculateAcceleration(massPoints, i, j);
+			}
+		}
+	}
+	return accelerations;
+}
+
+Vec3 MassSpringSystemSimulator::calculateAcceleration(vector<MassPoint> massPoints, uint16_t massPoint0Index, uint16_t massPoint1Index) {
 	
 	// Calculate currentLength
-	Vec3 point0Position = massSpringSystem.massPoints[massPoint0Index]._Position;
-	Vec3 point1Position = massSpringSystem.massPoints[massPoint1Index]._Position;
+	Vec3 point0Position = massPoints[massPoint0Index]._Position;
+	Vec3 point1Position = massPoints[massPoint1Index]._Position;
 	
 	float currentLength = Utility::getVectorLength(point1Position - point0Position);
 	Vec3 currentLengthVector = Utility::getNormalizedVector(point1Position - point0Position);
 	float initialLength = massSpringSystem.springsMatrix[massPoint0Index][massPoint1Index];
-	Vec3 acceleration = -m_fStiffness * (currentLength - initialLength) / m_fMass * Utility::getNormalizedVector(getPositionOfMassPoint(massPoint0Index) - getPositionOfMassPoint(massPoint1Index));
+	Vec3 acceleration = -m_fStiffness * (currentLength - initialLength) / m_fMass * Utility::getNormalizedVector(point0Position - point1Position);
 
 	return acceleration;	
 }
@@ -257,7 +275,7 @@ void MassSpringSystemSimulator::onMouse(int x, int y) {
 
 // Changing integrator from code (for test cases)
 void MassSpringSystemSimulator::setIntegrator(int integrator) {
-	if (integrator == 0 || integrator == 1) {
+	if (integrator == EULER || integrator == MIDPOINT) {
 		m_iTestCase = integrator;
 	}
 }

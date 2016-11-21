@@ -1,4 +1,5 @@
 #include "MassSpringSystemSimulator.h"
+#include <cmath>
 
 enum Demo {
 	DemoUnkown = 0,
@@ -22,11 +23,12 @@ Vec3 gravity = Vec3(0, 0, 0);
 
 MassSpringSystemSimulator::MassSpringSystemSimulator() {
 	SetupDemo1();
+	setIntegrator(LEAPFROG);
 }
 
 
 const char * MassSpringSystemSimulator::getTestCasesStr(){
-	return "Euler,MidPoint";
+	return "Euler,LeapFrog,MidPoint";
 }
 
 void MassSpringSystemSimulator::reset(){
@@ -62,7 +64,6 @@ void MassSpringSystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateCont
 			SetupDemo4();
 			break;
 		}
-		prevDemo = demo;
 	}
 	drawSingleSpringSystem();
 }
@@ -70,6 +71,7 @@ void MassSpringSystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateCont
 void MassSpringSystemSimulator::SetupDemo1()
 {
 	// add the 2 given mass points
+	prevDemo = Demo1;
 	setStiffness(40.f);
 	setMass(10.f);
 	massSpringSystem = MassSpringSystem();
@@ -80,20 +82,23 @@ void MassSpringSystemSimulator::SetupDemo1()
 void MassSpringSystemSimulator::SetupDemo2()
 {
 	// add the 2 given mass points
-	setIntegrator(EULER);
 	SetupDemo1();
+	setIntegrator(EULER);
+	prevDemo = Demo2;
 }
 
 void MassSpringSystemSimulator::SetupDemo3()
 {
 	// add the 2 given mass points
-	setIntegrator(MIDPOINT);
 	SetupDemo1();
+	setIntegrator(MIDPOINT);
+	prevDemo = Demo3;
 }
 
 
 void MassSpringSystemSimulator::SetupDemo4()
 {
+	prevDemo = Demo4;
 	setStiffness(40.f);
 	setMass(10.f);
 	gravity = Vec3(0, 0, 0);
@@ -109,21 +114,21 @@ void MassSpringSystemSimulator::SetupDemo4()
 	addMassPoint(Vec3(0.3, 0.1, 0), Vec3(-.1, 0, -.1), 10, false);
 	addMassPoint(Vec3(0.6, 0.1, 0.1), Vec3(-.1, .3, -.3), 10, false);
 	addMassPoint(Vec3(0.3, 0.2, 0.6), Vec3(.2, -.1, .2), 10, false);
-	addSpring(0, 1, 1);
-	addSpring(1, 3, 0.5);
-	addSpring(3, 5, 0.8);
-	addSpring(5, 4, 1);
-	addSpring(4, 3, 0.6);
-	addSpring(3, 6, 0.4);
-	addSpring(6, 7, 0.2);
-	addSpring(7, 9, 0.8);
-	addSpring(9, 0, 0.4);
-	addSpring(0, 8, 0.6);
-	addSpring(8, 3, 0.1);
-	addSpring(3, 6, 0.2);
-	addSpring(6, 0, 0.4);
-	addSpring(0, 3, 0.7);
-	addSpring(3, 2, 0.1);
+	addSpring(0, 1, 1.f);
+	addSpring(1, 3, 0.5f);
+	addSpring(3, 5, 0.8f);
+	addSpring(5, 4, 1.f);
+	addSpring(4, 3, 0.6f);
+	addSpring(3, 6, 0.4f);
+	addSpring(6, 7, 0.2f);
+	addSpring(7, 9, 0.8f);
+	addSpring(9, 0, 0.4f);
+	addSpring(0, 8, 0.6f);
+	addSpring(8, 3, 0.1f);
+	addSpring(3, 6, 0.2f);
+	addSpring(6, 0, 0.4f);
+	addSpring(0, 3, 0.7f);
+	addSpring(3, 2, 0.1f);
 }
 
 // Call this function to update the rendering of demo1, make sure to calculate the next frame before this
@@ -200,6 +205,14 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 		vector<MassPoint> halfSetpMassPoints = eulerStepCalculation(massSpringSystem.massPoints, timeStep / 2);
 		massSpringSystem.massPoints = midpointCalculations(massSpringSystem.massPoints, halfSetpMassPoints, timeStep);
 	}
+	else if (m_iTestCase == LEAPFROG) {
+		//no initial drift for velocities but doesn't matter..
+		vector<MassPoint> oneStepMassPoints = eulerStepCalculation(massSpringSystem.massPoints, timeStep);
+		massSpringSystem.massPoints = leapFrogCalculations(massSpringSystem.massPoints, oneStepMassPoints, timeStep);
+	}
+	else {
+		m_iTestCase = EULER;
+	}
 }
 
 vector<MassPoint> MassSpringSystemSimulator::eulerStepCalculation(vector<MassPoint> massPoints, float timeStep)
@@ -226,14 +239,40 @@ vector<MassPoint> MassSpringSystemSimulator::midpointCalculations(vector<MassPoi
 
 	for (int i = 0; i < getNumberOfMassPoints(); i++)
 	{
-		newMassPoints[i]._Position = oldMassPoints[i]._Position + (timeStep * midPointMassPoints[i]._Velocity);
+		if (!newMassPoints[i]._IsFixed) {
+			newMassPoints[i]._Position = oldMassPoints[i]._Position + (timeStep * midPointMassPoints[i]._Velocity);
+		}
 		checkCollisions(i);
 	}
 	for (int i = 0; i < getNumberOfMassPoints(); i++)
 	{
-		newMassPoints[i]._Velocity = oldMassPoints[i]._Velocity + (timeStep * midPointAccelerations[i]);
+		if (!newMassPoints[i]._IsFixed) {
+			newMassPoints[i]._Velocity = oldMassPoints[i]._Velocity + (timeStep * midPointAccelerations[i]);
+		}
+	}
+	return newMassPoints;
+}
+
+vector<MassPoint> MassSpringSystemSimulator::leapFrogCalculations(vector<MassPoint> oldMassPoints, vector<MassPoint> oneSetpMassPoints, float timeStep) {
+	vector<MassPoint> newMassPoints = oldMassPoints;
+	vector<Vec3> oldPointsAcceleration = calculateAccelerations(oldMassPoints);
+
+	for (int i = 0; i < getNumberOfMassPoints(); i++)
+	{
+		if (!newMassPoints[i]._IsFixed) {
+			newMassPoints[i]._Position = oldMassPoints[i]._Position + (timeStep * oldMassPoints[i]._Velocity) + (0.5 * oldPointsAcceleration[i] * pow(timeStep, 2));
+		}
+		checkCollisions(i);
 	}
 
+	vector<Vec3> newPointsAcceleration = calculateAccelerations(newMassPoints);
+
+	for (int i = 0; i < getNumberOfMassPoints(); i++)
+	{
+		if (!newMassPoints[i]._IsFixed) {
+			newMassPoints[i]._Velocity = oldMassPoints[i]._Velocity + (timeStep / 2 * (oldPointsAcceleration[i] + newPointsAcceleration[i]));
+		}
+	}
 	return newMassPoints;
 }
 
@@ -242,7 +281,7 @@ vector<Vec3> MassSpringSystemSimulator::calculateAccelerations(vector<MassPoint>
 	for (int i = 0; i < getNumberOfMassPoints(); i++)
 	{
 		accelerations.push_back(gravity);
-		for (int j = 0; j < massPoints.size(); j++) {
+		for (uint16_t j = 0; j < massPoints.size(); j++) {
 			if (i != j && massSpringSystem.springsMatrix[i][j] != 0) {
 				accelerations[i] += calculateAcceleration(massPoints, i, j);
 			}
@@ -275,7 +314,7 @@ void MassSpringSystemSimulator::onMouse(int x, int y) {
 
 // Changing integrator from code (for test cases)
 void MassSpringSystemSimulator::setIntegrator(int integrator) {
-	if (integrator == EULER || integrator == MIDPOINT) {
+	if (integrator == EULER || integrator == MIDPOINT || integrator == LEAPFROG) {
 		m_iTestCase = integrator;
 	}
 }

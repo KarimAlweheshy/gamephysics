@@ -65,6 +65,7 @@ private:
 	void integratePositionsUsingEuler(float timeStep);
 	vector<MassPoint> eulerStepCalculation(vector<MassPoint> masspoints, float timeStep);
 	vector<MassPoint> midpointCalculations(vector<MassPoint> oldMassPoints, vector<MassPoint> midPointMassPoints, float timeStep);
+	vector<MassPoint> leapFrogCalculations(vector<MassPoint> oldMassPoints, vector<MassPoint> oneSetpMassPoints, float timeStep);
 	vector<Vec3> calculateAccelerations(vector<MassPoint> massPoints);
 	Vec3 calculateAcceleration(vector<MassPoint> massPoints, uint16_t massPoint0Index, uint16_t massPoint1Index);
 	void checkCollisions(uint16_t massPointId);

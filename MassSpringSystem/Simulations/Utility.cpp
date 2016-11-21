@@ -15,4 +15,10 @@ Vec3 Utility::getNormalizedVector(Vec3 vector)
 	return vector;
 }
 
+Vec3 Utility::reverseVectorY(Vec3 vector)
+{
+	vector.y *= -1;
+	return vector;
+}
+
 

@@ -101,7 +101,7 @@ void MassSpringSystemSimulator::SetupDemo4()
 	prevDemo = Demo4;
 	setStiffness(40.f);
 	setMass(10.f);
-	gravity = Vec3(0, 0, 0);
+	gravity = Vec3(0, -9.8, 0);
 	// add the 2 given mass points
 	massSpringSystem = MassSpringSystem();
 	addMassPoint(Vec3(0, 0, 0), Vec3(-0.1, 0.3, 0.2), 10, false);
@@ -175,7 +175,28 @@ void MassSpringSystemSimulator::notifyCaseChanged(int testCase) {
 // TimeElapsed is the time step since last the last calculations
 void MassSpringSystemSimulator::externalForcesCalculations(float timeElapsed)
 {
-	// calculate external acceleration (mouse input / gravity / etc.) here
+	// Apply accumulated mouse deltas to g_vfMovableObjectPos (move along cameras view plane)
+	if (m_trackmouse.x != 0 || m_trackmouse.y != 0)
+	{
+		// Calcuate camera directions in world space
+		Mat4 m = Mat4(DUC->g_camera.GetViewMatrix());
+		m = m.inverse();
+		Vec3 camRightWorld = Vec3(g_XMIdentityR0);
+		camRightWorld = m.transformVectorNormal(camRightWorld);
+		Vec3 camUpWorld = Vec3(g_XMIdentityR1);
+		camUpWorld = m.transformVectorNormal(camUpWorld);
+
+		// Add accumulated mouse deltas to movable object pos
+
+		float speedScale = 0.001f;
+		for(int i = 0; i < getNumberOfMassPoints(); i++)
+		{ 
+			massSpringSystem.massPoints[i]._Position += speedScale * (float)m_trackmouse.x * camRightWorld;
+			massSpringSystem.massPoints[i]._Position += -speedScale * (float)m_trackmouse.y * camUpWorld;
+		}
+		// Reset accumulated mouse deltas
+		m_trackmouse.x = m_trackmouse.y = 0;
+	}
 }
 
 void MassSpringSystemSimulator::addSpring(uint16_t masspoint1, uint16_t masspoint2, float initialLength)
@@ -304,14 +325,6 @@ Vec3 MassSpringSystemSimulator::calculateAcceleration(vector<MassPoint> massPoin
 	return acceleration;	
 }
 
-void MassSpringSystemSimulator::onClick(int x, int y) {
-	// Not applicable in exercice 1
-}
-
-void MassSpringSystemSimulator::onMouse(int x, int y) {
-	// Not applicable in exercice 1
-}
-
 // Changing integrator from code (for test cases)
 void MassSpringSystemSimulator::setIntegrator(int integrator) {
 	if (integrator == EULER || integrator == MIDPOINT || integrator == LEAPFROG) {
@@ -350,9 +363,11 @@ void MassSpringSystemSimulator::setDampingFactor(float damping) {
 void MassSpringSystemSimulator::checkCollisions(uint16_t massPointId)
 {
 	Vec3 tmpPos = getPositionOfMassPoint(massPointId);
-	if (tmpPos.Y < 0.f)
-		massSpringSystem.massPoints[massPointId]._Position.y = 0.f - tmpPos.Y;
-
+	if (tmpPos.Y < -1.f)
+	{ 
+		massSpringSystem.massPoints[massPointId]._Position.y = -1.f - 0.1*tmpPos.Y;
+		massSpringSystem.massPoints[massPointId]._Velocity = Utility::reverseVectorY(massSpringSystem.massPoints[massPointId]._Velocity);
+	}
 }
 
 int MassSpringSystemSimulator::addMassPoint(Vec3 position, Vec3 velocity, float mass, bool isFixed) 
@@ -385,3 +400,15 @@ Vec3 MassSpringSystemSimulator::getVelocityOfMassPoint(int index) {
 void MassSpringSystemSimulator::applyExternalForce(Vec3 force) {
 	massSpringSystem.externalForce += force;
 }
+
+void MassSpringSystemSimulator::onClick(int x, int y)
+{
+	m_trackmouse.x += x - m_oldtrackmouse.x;
+	m_trackmouse.y += y - m_oldtrackmouse.y;
+}
+
+void MassSpringSystemSimulator::onMouse(int x, int y)
+{
+	m_oldtrackmouse.x = x;
+	m_oldtrackmouse.y = y;
+};

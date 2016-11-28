@@ -28,7 +28,17 @@ void RigidBodySystem::applyForceOnBody(int i, Vec3 loc, Vec3 force) {
 Mat4 RigidBodySystem::objectToWorld(int i) {
 	RigidBody rigidBody = rigidBodies[i];
 	//(translatMat * rotMat * scaleMat)
-	return Mat4();
+	Mat4 translationMatrix = Mat4(rigidBody.size.x, 0, 0, 0, 0, rigidBody.size.y, 0, 0, 0, 0, rigidBody.size.z, 0, 0, 0, 0, 1);
+
+	Mat4 rotationMatrix = rigidBody.orientation.getRotMat();
+	
+	//Identity scale matrix
+	Mat4 identityMatrix = Mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+	
+	// The identity matrix holds for the scale Matrix
+	Mat4 objectToWorld = translationMatrix * rotationMatrix * identityMatrix;
+
+	return objectToWorld;
 }
 
 vector<vector<double>> RigidBodySystem::inertiaTensor(RigidBody rigidBody) {
@@ -40,13 +50,13 @@ vector<vector<double>> RigidBodySystem::inertiaTensor(RigidBody rigidBody) {
 	double i11 = 1 / 12 * rigidBody.mass * (pow(rigidBody.size.x, 2) + pow(rigidBody.size.z, 2));
 	double i22 = 1 / 12 * rigidBody.mass * (pow(rigidBody.size.x, 2) + pow(rigidBody.size.y, 2));
 
-	vector<double> xVector = vector<double>();
+	vector<double> xVector = vector<double>(3);
 	xVector[0] = i00;
 
-	vector<double> yVector = vector<double>();
+	vector<double> yVector = vector<double>(3);
 	yVector[0] = i11;
 
-	vector<double> zVector = vector<double>();
+	vector<double> zVector = vector<double>(3);
 	zVector[0] = i22;
 
 	tensor.push_back(xVector);

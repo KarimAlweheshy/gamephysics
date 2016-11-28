@@ -3,6 +3,14 @@
 // Construtors
 RigidBodySystemSimulator::RigidBodySystemSimulator() {
 	m_pRigidBodySystem = new RigidBodySystem();
+	
+	Vec3 position = Vec3(1.0);
+	Vec3 size = Vec3(1, 0.6, 0.5);
+	int mass = 2;
+	addRigidBody(position, size, mass);
+
+	Quat quat = Quat(Vec3(0, 0, 1), 90);
+	setOrientationOf(0, quat);
 }
 
 // Functions
@@ -19,10 +27,15 @@ void RigidBodySystemSimulator::reset() {
 }
 
 void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext) {
-	// Draw Frame according to calculated new positions for the points
+	// Draw Frame according to calculated new positions for the rigid bodies
+	std::mt19937 eng;
+	std::uniform_real_distribution<float> randCol(0.0f, 1.0f);
+	DUC->setUpLighting(Vec3(), 0.4 * Vec3(1, 1, 1), 100, 0.6 * Vec3(randCol(eng), randCol(eng), randCol(eng)));
+
 	for (uint16_t i = 0; i < m_pRigidBodySystem->rigidBodies.size(); i++) {
 		// draw rigid body
-		DUC->drawRigidBody(m_pRigidBodySystem->objectToWorld(i));
+		Mat4 objectToWorld = m_pRigidBodySystem->objectToWorld(i);
+		DUC->drawRigidBody(objectToWorld);
 	}
 }
 

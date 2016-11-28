@@ -2,15 +2,7 @@
 
 // Construtors
 RigidBodySystemSimulator::RigidBodySystemSimulator() {
-	m_pRigidBodySystem = new RigidBodySystem();
-	
-	Vec3 position = Vec3(1.0);
-	Vec3 size = Vec3(1, 0.6, 0.5);
-	int mass = 2;
-	addRigidBody(position, size, mass);
-
-	Quat quat = Quat(Vec3(0, 0, 1), 90);
-	setOrientationOf(0, quat);
+	notifyCaseChanged(1);
 }
 
 // Functions
@@ -23,7 +15,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass * DUC) {
 }
 
 void RigidBodySystemSimulator::reset() {
-
+	notifyCaseChanged(1);
 }
 
 void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext) {
@@ -34,13 +26,22 @@ void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateConte
 
 	for (uint16_t i = 0; i < m_pRigidBodySystem->rigidBodies.size(); i++) {
 		// draw rigid body
-		Mat4 objectToWorld = m_pRigidBodySystem->objectToWorld(i);
-		DUC->drawRigidBody(objectToWorld);
+		DUC->drawRigidBody(m_pRigidBodySystem->objectToWorld(i));
 	}
 }
 
 void RigidBodySystemSimulator::notifyCaseChanged(int testCase) {
+	if (testCase == 1) {
+		m_pRigidBodySystem = new RigidBodySystem();
 
+		Vec3 position = Vec3(1.0);
+		Vec3 size = Vec3(1, 0.6, 0.5);
+		int mass = 2;
+		addRigidBody(position, size, mass);
+
+		Quat quat = Quat(Vec3(0, 0, 1), 90);
+		setOrientationOf(0, quat);
+	}
 }
 
 void RigidBodySystemSimulator::externalForcesCalculations(float timeElapsed) {
@@ -48,7 +49,12 @@ void RigidBodySystemSimulator::externalForcesCalculations(float timeElapsed) {
 }
 
 void RigidBodySystemSimulator::simulateTimestep(float timeStep) {
-
+	/* basic principle:
+	1. calculate current tensor
+	2. update position with old position and old velocity(call appropriate masspoint function)
+	3. update velocity with acceleration from 1.(call appropriate masspoint function)
+	*/
+	vector<vector<double>> currentTensor = m_pRigidBodySystem->rigidBodies[0].currentTensor();
 }
 
 void RigidBodySystemSimulator::onClick(int x, int y) {

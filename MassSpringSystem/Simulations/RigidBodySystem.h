@@ -15,9 +15,6 @@ public:
 
 	//Variables
 	vector<RigidBody> rigidBodies;
-
-private:
-	vector<vector<double>> inertiaTensor(RigidBody rigidBody);
 };
 
 #endif

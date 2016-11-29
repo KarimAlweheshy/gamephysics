@@ -1,10 +1,16 @@
 #include "RigidBody.h"
 #include "Utility.h"
+#include "math.h"
 
 RigidBody::RigidBody(Vec3 position, Vec3 size, int mass) {
 	this->position = position;
 	this->size = size;
 	this->mass = mass;
+
+	this->orientation = Quat();
+	this->angularVelocity = Vec3();
+	this->linearVelocity = Vec3();
+	this->torque = Vec3();
 
 	//Calculate inertia tensors
 	tensor = inertiaTensor();
@@ -35,12 +41,12 @@ vector<vector<double>> RigidBody::inertiaTensor() {
 	return tensor;
 }
 
-vector<vector<double>> RigidBody::currentTensor() {
-	Mat4 rotationMatrix = orientation.getRotMat();
+vector<vector<double>> RigidBody::currentInverseTensor() {
+	Mat4 rotationMatrix = orientation.getRotMat().inverse();
 	vector<vector<double>> rotationMatrix3D = Utility::threeDMatrixFromMat4(rotationMatrix);
 
-	Mat4 inverseRotationMatrix = rotationMatrix.inverse();
-	vector<vector<double>> inverseRotationMatrix3D = Utility::threeDMatrixFromMat4(inverseRotationMatrix);
+	rotationMatrix.transpose();
+	vector<vector<double>> inverseRotationMatrix3D = Utility::threeDMatrixFromMat4(rotationMatrix);
 
 	vector<vector<double>> result = Utility::dotProduct(Utility::dotProduct(rotationMatrix3D, tensor), inverseRotationMatrix3D);
 	return result;

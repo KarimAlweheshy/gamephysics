@@ -38,9 +38,11 @@ void RigidBodySystemSimulator::notifyCaseChanged(int testCase) {
 		Vec3 size = Vec3(1, 0.6, 0.5);
 		int mass = 2;
 		addRigidBody(position, size, mass);
-
+		
 		Quat quat = Quat(Vec3(0, 0, 1), 90);
 		setOrientationOf(0, quat);
+	
+		applyForceOnBody(0, Vec3(0.3, 0.5, 0.25), Vec3(1.0, 1.0, 0.0));
 	}
 }
 
@@ -66,8 +68,33 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep) {
 			q += cross(currentX, currentForce);
 		}
 
-		// Calculate current tensor
-		vector<vector<double>> currentTensor = m_pRigidBodySystem->rigidBodies[0].currentTensor();
+		// 3. Euler Step for center of mass position and velosity
+		currentRigidBody.position = currentRigidBody.position + (timeStep * currentRigidBody.linearVelocity);
+		currentRigidBody.linearVelocity = currentRigidBody.linearVelocity + (timeStep * sumOfForcesVectors / currentRigidBody.mass);
+
+		// 4. Update quaternion
+		Quat angularVelocity = Quat();
+		angularVelocity.w = 0;
+		angularVelocity.x = currentRigidBody.angularVelocity.x * currentRigidBody.orientation.x;
+		angularVelocity.y = currentRigidBody.angularVelocity.y * currentRigidBody.orientation.y;
+		angularVelocity.z = currentRigidBody.angularVelocity.z * currentRigidBody.orientation.z;
+		currentRigidBody.orientation = currentRigidBody.orientation + (timeStep / 2.0 * angularVelocity);
+
+		// 5. Calculate L
+		currentRigidBody.torque = currentRigidBody.torque + (timeStep * q);
+
+		// 6. Get inverse current inertia tensor
+		vector<vector<double>> inverseCurrentTensor = currentRigidBody.currentInverseTensor();
+
+		// 7. Calculate angular velocity
+		currentRigidBody.angularVelocity = Vec3();
+		for (uint16_t i = 0; i < inverseCurrentTensor.size(); i++) {
+			float result = 0;
+			for (uint16_t j = 0; j < inverseCurrentTensor.size(); j++) {
+				result += inverseCurrentTensor[i][j] * currentRigidBody.torque[j];
+			}
+			currentRigidBody.angularVelocity[i] = result;
+		}
 	}
 
 	//Reset all forces on ridig bodies

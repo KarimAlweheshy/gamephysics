@@ -20,8 +20,6 @@ public:
 private:
 	vector<vector<double>> tensor;
 	vector<vector<double>> inertiaTensor();
-	vector<vector<double>> threeDMatrixFromMat4(Mat4 matrix);
-	vector<vector<double>> dotMultiplication(vector<vector<double>> firstOperand, vector<vector<double>> secondOperand);
 };
 
 #endif

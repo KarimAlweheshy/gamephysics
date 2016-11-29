@@ -19,7 +19,6 @@ void RigidBodySystem::setVelocityOf(int i, Vec3 velocity) {
 	rigidBodies[i].linearVelocity = velocity;
 }
 void RigidBodySystem::applyForceOnBody(int i, Vec3 loc, Vec3 force) {
-	//What is loc
 	ForceOnRigidBody forceOnRigidBody = ForceOnRigidBody();
 	forceOnRigidBody.force = force;
 	forceOnRigidBody.loc = loc;
@@ -31,12 +30,12 @@ void RigidBodySystem::resetForceSOnAllBodies() {
 	forcesOnRigidBodies = vector<ForceOnRigidBody>();
 }
 
-vector<Vec3> RigidBodySystem::forcesVectorsOnRigidBodyWithIndex(int index) {
-	vector<Vec3> forcesVector = vector<Vec3>();
+vector<ForceOnRigidBody> RigidBodySystem::forcesOnRigidBodyWithIndex(int index) {
+	vector<ForceOnRigidBody> forcesVector = vector<ForceOnRigidBody>();
 	for (uint16_t i = 0; i < forcesOnRigidBodies.size(); i++) {
 		ForceOnRigidBody currentForce = forcesOnRigidBodies[i];
 		if (currentForce.onRigidBodyIndex == index) {
-			forcesVector.push_back(currentForce.force);
+			forcesVector.push_back(currentForce);
 		}
 	}
 	return forcesVector;

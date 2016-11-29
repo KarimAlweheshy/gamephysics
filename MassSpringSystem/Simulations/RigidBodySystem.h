@@ -18,7 +18,7 @@ public:
 	void setVelocityOf(int i, Vec3 velocity);
 	void applyForceOnBody(int i, Vec3 loc, Vec3 force);
 	void resetForceSOnAllBodies();
-	vector<Vec3> forcesVectorsOnRigidBodyWithIndex(int index);
+	vector<ForceOnRigidBody> forcesOnRigidBodyWithIndex(int index);
 	Mat4 objectToWorld(int i);
 
 	//Variables

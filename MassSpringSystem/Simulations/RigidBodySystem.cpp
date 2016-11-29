@@ -3,6 +3,7 @@
 
 RigidBodySystem::RigidBodySystem() {
 	rigidBodies = vector<RigidBody>();
+	forcesOnRigidBodies = vector<ForceOnRigidBody>();
 }
 
 void RigidBodySystem::addRigidBody(Vec3 position, Vec3 size, int mass) {
@@ -19,6 +20,26 @@ void RigidBodySystem::setVelocityOf(int i, Vec3 velocity) {
 }
 void RigidBodySystem::applyForceOnBody(int i, Vec3 loc, Vec3 force) {
 	//What is loc
+	ForceOnRigidBody forceOnRigidBody = ForceOnRigidBody();
+	forceOnRigidBody.force = force;
+	forceOnRigidBody.loc = loc;
+	forceOnRigidBody.onRigidBodyIndex = i;
+	forcesOnRigidBodies.push_back(forceOnRigidBody);
+}
+
+void RigidBodySystem::resetForceSOnAllBodies() {
+	forcesOnRigidBodies = vector<ForceOnRigidBody>();
+}
+
+vector<Vec3> RigidBodySystem::forcesVectorsOnRigidBodyWithIndex(int index) {
+	vector<Vec3> forcesVector = vector<Vec3>();
+	for (uint16_t i = 0; i < forcesOnRigidBodies.size(); i++) {
+		ForceOnRigidBody currentForce = forcesOnRigidBodies[i];
+		if (currentForce.onRigidBodyIndex == index) {
+			forcesVector.push_back(currentForce.force);
+		}
+	}
+	return forcesVector;
 }
 
 Mat4 RigidBodySystem::objectToWorld(int i) {

@@ -50,11 +50,20 @@ void RigidBodySystemSimulator::externalForcesCalculations(float timeElapsed) {
 
 void RigidBodySystemSimulator::simulateTimestep(float timeStep) {
 	/* basic principle:
+	1. Calculate all forces on body
 	1. calculate current tensor
 	2. update position with old position and old velocity(call appropriate masspoint function)
 	3. update velocity with acceleration from 1.(call appropriate masspoint function)
 	*/
+	for (uint16_t i = 0; i < m_pRigidBodySystem->rigidBodies.size(); i++) {
+		Vec3 forcesOnBody = m_pRigidBodySystem->forcesVectorsOnRigidBodyWithIndex(i);
+	}
+
+
 	vector<vector<double>> currentTensor = m_pRigidBodySystem->rigidBodies[0].currentTensor();
+
+	//Reset all forces on ridig bodies
+	m_pRigidBodySystem->resetForceSOnAllBodies();
 }
 
 void RigidBodySystemSimulator::onClick(int x, int y) {

@@ -13,7 +13,7 @@ vector<vector<double>> RigidBody::inertiaTensor() {
 	//Init vector
 	vector<vector<double>> tensor = vector<vector<double>>();
 
-	//Calculate diagonal item
+	//Calculate diagonals
 	double i00 = (1.0 / 12.0) * (double)mass * (pow(size.z, 2) + pow(size.y, 2));
 	double i11 = (1.0 / 12.0) * (double)mass * (pow(size.x, 2) + pow(size.z, 2));
 	double i22 = (1.0 / 12.0) * (double)mass * (pow(size.x, 2) + pow(size.y, 2));

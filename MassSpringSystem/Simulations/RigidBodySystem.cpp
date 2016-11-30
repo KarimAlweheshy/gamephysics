@@ -7,7 +7,7 @@ RigidBodySystem::RigidBodySystem() {
 }
 
 void RigidBodySystem::addRigidBody(Vec3 position, Vec3 size, int mass) {
-	RigidBody rigidBody = RigidBody(position, size, mass);
+	RigidBody rigidBody = RigidBody(position, size, (float)mass);
 	rigidBodies.push_back(rigidBody);
 }
 

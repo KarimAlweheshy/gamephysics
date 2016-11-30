@@ -70,7 +70,8 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep) {
 
 		// 3. Euler Step for center of mass position and velosity
 		currentRigidBody.position = currentRigidBody.position + (timeStep * currentRigidBody.linearVelocity);
-		currentRigidBody.linearVelocity = currentRigidBody.linearVelocity + (timeStep * sumOfForcesVectors / currentRigidBody.mass);
+		Vec3 temp = timeStep * sumOfForcesVectors / currentRigidBody.mass;
+		currentRigidBody.linearVelocity = currentRigidBody.linearVelocity + temp;
 
 		// 4. Update quaternion
 		Quat angularVelocity = Quat();

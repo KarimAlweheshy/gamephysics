@@ -2,7 +2,7 @@
 #include "Utility.h"
 #include "math.h"
 
-RigidBody::RigidBody(Vec3 position, Vec3 size, int mass) {
+RigidBody::RigidBody(Vec3 position, Vec3 size, float mass) {
 	this->position = position;
 	this->size = size;
 	this->mass = mass;
@@ -21,9 +21,9 @@ vector<vector<double>> RigidBody::inertiaTensor() {
 	vector<vector<double>> tensor = vector<vector<double>>();
 
 	//Calculate diagonals
-	double i00 = (1.0 / 12.0) * (double)mass * (pow(size.z, 2) + pow(size.y, 2));
-	double i11 = (1.0 / 12.0) * (double)mass * (pow(size.x, 2) + pow(size.z, 2));
-	double i22 = (1.0 / 12.0) * (double)mass * (pow(size.x, 2) + pow(size.y, 2));
+	double i00 = (1.0 / 12.0) * mass * (pow(size.z, 2) + pow(size.y, 2));
+	double i11 = (1.0 / 12.0) * mass * (pow(size.x, 2) + pow(size.z, 2));
+	double i22 = (1.0 / 12.0) * mass * (pow(size.x, 2) + pow(size.y, 2));
 
 	vector<double> xVector = vector<double>(3);
 	xVector[0] = i00;

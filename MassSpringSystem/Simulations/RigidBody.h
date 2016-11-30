@@ -6,13 +6,13 @@
 class RigidBody {
 public:
 	//Constructor
-	RigidBody(Vec3 position, Vec3 size, int mass);
+	RigidBody(Vec3 position, Vec3 size, float mass);
 	vector<vector<double>> currentInverseTensor();
 
 	//Attributes
 	Vec3 position;
 	Vec3 size;
-	int mass;
+	float mass;
 	Quat orientation;
 	Vec3 angularVelocity;
 	Vec3 linearVelocity;

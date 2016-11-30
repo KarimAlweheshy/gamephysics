@@ -96,6 +96,8 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep) {
 			}
 			currentRigidBody.angularVelocity[i] = result;
 		}
+
+		m_pRigidBodySystem->rigidBodies[i] = currentRigidBody;
 	}
 
 	//Reset all forces on ridig bodies

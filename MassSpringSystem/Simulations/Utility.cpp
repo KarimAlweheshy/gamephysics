@@ -21,12 +21,12 @@ Vec3 Utility::reverseVectorY(Vec3 vector)
 	return vector;
 }
 
-vector<vector<double>> Utility::dotProduct(vector<vector<double>> firstOperand, vector<vector<double>> secondOperand) {
-	vector<vector<double>> resultMatrix = firstOperand;
+vector<vector<float>> Utility::dotProduct(vector<vector<float>> firstOperand, vector<vector<float>> secondOperand) {
+	vector<vector<float>> resultMatrix = firstOperand;
 	for (uint16_t i = 0; i < firstOperand.size(); i++) {
 		for (uint16_t j = 0; j < firstOperand.size(); j++) {
 			//calculate for i row j column
-			double result = 0;
+			float result = 0;
 			for (uint16_t k = 0; k < firstOperand.size(); k++) {
 				result += firstOperand[i][k] * secondOperand[k][j];
 			}
@@ -36,22 +36,22 @@ vector<vector<double>> Utility::dotProduct(vector<vector<double>> firstOperand, 
 	return resultMatrix;
 }
 
-vector<vector<double>> Utility::threeDMatrixFromMat4(Mat4 matrix) {
-	vector<vector<double>> result = vector<vector<double>>();
+vector<vector<float>> Utility::threeDMatrixFromMat4(Mat4 matrix) {
+	vector<vector<float>> result = vector<vector<float>>();
 
-	vector<double> firstRow = vector<double>();
+	vector<float> firstRow = vector<float>();
 	firstRow.push_back(matrix.value[0][0]);
 	firstRow.push_back(matrix.value[0][1]);
 	firstRow.push_back(matrix.value[0][2]);
 	result.push_back(firstRow);
 
-	vector<double> secondRow = vector<double>();
+	vector<float> secondRow = vector<float>();
 	secondRow.push_back(matrix.value[1][0]);
 	secondRow.push_back(matrix.value[1][1]);
 	secondRow.push_back(matrix.value[1][2]);
 	result.push_back(secondRow);
 
-	vector<double> thirdRow = vector<double>();
+	vector<float> thirdRow = vector<float>();
 	thirdRow.push_back(matrix.value[2][0]);
 	thirdRow.push_back(matrix.value[2][1]);
 	thirdRow.push_back(matrix.value[2][2]);

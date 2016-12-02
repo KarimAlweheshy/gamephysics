@@ -2,7 +2,7 @@
 
 // Construtors
 RigidBodySystemSimulator::RigidBodySystemSimulator() {
-	notifyCaseChanged(1);
+	m_pRigidBodySystem = new RigidBodySystem();
 }
 
 // Functions
@@ -33,16 +33,14 @@ void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateConte
 void RigidBodySystemSimulator::notifyCaseChanged(int testCase) {
 	if (testCase == 1) {
 		m_pRigidBodySystem = new RigidBodySystem();
-
-		Vec3 position = Vec3(1.0);
-		Vec3 size = Vec3(1, 0.6, 0.5);
-		int mass = 2;
-		addRigidBody(position, size, mass);
 		
-		Quat quat = Quat(Vec3(0, 0, 1), 90);
-		setOrientationOf(0, quat);
-	
-		applyForceOnBody(0, Vec3(0.3, 0.5, 0.25), Vec3(1.0, 1.0, 0.0));
+		addRigidBody(Vec3(-0.1f, -0.2f, 0.1f), Vec3(0.4f, 0.2f, 0.2f), 100.0f);
+
+		addRigidBody(Vec3(0.0f, 0.2f, 0.0f), Vec3(0.4f, 0.2f, 0.2f), 100.0);
+		setOrientationOf(1, Quat(Vec3(0.0f, 0.0f, 1.0f), (float)(M_PI)*0.25f));
+		setVelocityOf(1, Vec3(0.0f, -0.1f, 0.05f));
+
+		applyForceOnBody(0, Vec3(0.0, 0.0f, 0.0), Vec3(0, 0, 200));
 	}
 }
 
@@ -54,54 +52,59 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep) {
 	for (uint16_t i = 0; i < m_pRigidBodySystem->rigidBodies.size(); i++) {
 		//1. Calculate all forces on body
 		vector<ForceOnRigidBody> forcesOnBody = m_pRigidBodySystem->forcesOnRigidBodyWithIndex(i);
-		Vec3 sumOfForcesVectors = Vec3();
+		Vec3 sumOfForcesVectors = Vec3(0.f);
 		for (uint16_t j = 0; j < forcesOnBody.size(); j++) {
 			sumOfForcesVectors += forcesOnBody[j].force;
 		}
 
 		// 2. Calculate q
 		RigidBody currentRigidBody = m_pRigidBodySystem->rigidBodies[i];
-		Vec3 q = Vec3();
+		Vec3 q = Vec3(0.f);
 		for (uint16_t i = 0; i < forcesOnBody.size(); i++) {
 			Vec3 currentX = forcesOnBody[i].loc - currentRigidBody.position;
 			Vec3 currentForce = forcesOnBody[i].force;
-			q += cross(currentX, currentForce);
+			q -= cross(currentX, currentForce);
 		}
 
 		// 3. Euler Step for center of mass position and velosity
 		currentRigidBody.position = currentRigidBody.position + (timeStep * currentRigidBody.linearVelocity);
-		Vec3 temp = timeStep * sumOfForcesVectors / currentRigidBody.mass;
-		currentRigidBody.linearVelocity = currentRigidBody.linearVelocity + temp;
+		currentRigidBody.linearVelocity += timeStep * sumOfForcesVectors / currentRigidBody.mass;
 
 		// 4. Update quaternion
 		Quat angularVelocity = Quat();
-		angularVelocity.w = 0;
 		angularVelocity.x = currentRigidBody.angularVelocity.x * currentRigidBody.orientation.x;
 		angularVelocity.y = currentRigidBody.angularVelocity.y * currentRigidBody.orientation.y;
 		angularVelocity.z = currentRigidBody.angularVelocity.z * currentRigidBody.orientation.z;
-		currentRigidBody.orientation = currentRigidBody.orientation + (timeStep / 2.0 * angularVelocity);
+		currentRigidBody.orientation += timeStep / 2.f * angularVelocity;
 
 		// 5. Calculate L
 		currentRigidBody.torque = currentRigidBody.torque + (timeStep * q);
 
 		// 6. Get inverse current inertia tensor
-		vector<vector<double>> inverseCurrentTensor = currentRigidBody.currentInverseTensor();
+		vector<vector<float>> currentTensor = currentRigidBody.currentInverseTensor();
+		vector<vector<float>> inverseCurrentTensor = vector<vector<float>>();
+		vector<float> firstRow = vector<float>(3);
+		firstRow[0] = 1.f / currentTensor[0][0];
+		vector<float> secondDRow = vector<float>(3);
+		secondDRow[1] = 1.f / currentTensor[1][1];
+		vector<float> thirdRow = vector<float>(3);
+		thirdRow[2] = 1.f / currentTensor[2][2];
+		inverseCurrentTensor.push_back(firstRow);
+		inverseCurrentTensor.push_back(secondDRow);
+		inverseCurrentTensor.push_back(thirdRow);
 
 		// 7. Calculate angular velocity
-		currentRigidBody.angularVelocity = Vec3();
+		currentRigidBody.angularVelocity = Vec3(0.0);
 		for (uint16_t i = 0; i < inverseCurrentTensor.size(); i++) {
 			float result = 0;
 			for (uint16_t j = 0; j < inverseCurrentTensor.size(); j++) {
 				result += inverseCurrentTensor[i][j] * currentRigidBody.torque[j];
 			}
-			currentRigidBody.angularVelocity[i] = result;
+			currentRigidBody.angularVelocity[i] = -result;
 		}
 
 		m_pRigidBodySystem->rigidBodies[i] = currentRigidBody;
 	}
-
-	//Reset all forces on ridig bodies
-	m_pRigidBodySystem->resetForceSOnAllBodies();
 }
 
 void RigidBodySystemSimulator::onClick(int x, int y) {

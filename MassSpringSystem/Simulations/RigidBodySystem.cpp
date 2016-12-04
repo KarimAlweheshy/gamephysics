@@ -47,7 +47,7 @@ Mat4 RigidBodySystem::objectToWorld(int i) {
 	Mat4 translationMatrix = Mat4(rigidBody.size.x, 0, 0, 0,
 								  0, rigidBody.size.y, 0, 0, 
 								  0, 0, rigidBody.size.z, 0, 
-								  0, 0, 0,				  1);
+								  rigidBody.position.x, rigidBody.position.y, rigidBody.position.z, 1);
 
 	Mat4 rotationMatrix = rigidBody.orientation.getRotMat();
 

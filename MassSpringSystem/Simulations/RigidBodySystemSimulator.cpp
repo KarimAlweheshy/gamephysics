@@ -34,13 +34,14 @@ void RigidBodySystemSimulator::notifyCaseChanged(int testCase) {
 	if (testCase == 1) {
 		m_pRigidBodySystem = new RigidBodySystem();
 		
-		addRigidBody(Vec3(-0.1f, -0.2f, 0.1f), Vec3(0.4f, 0.2f, 0.2f), 100.0f);
+		addRigidBody(Vec3(0.f, 0.f, 0.f), Vec3(1.f, 0.6f, 0.5f), 2.0f);
+		setOrientationOf(0, Quat(Vec3(0.0f, 0.0f, 1.0f), (float)(M_PI)*0.5f));
 
-		addRigidBody(Vec3(0.0f, 0.2f, 0.0f), Vec3(0.4f, 0.2f, 0.2f), 100.0);
-		setOrientationOf(1, Quat(Vec3(0.0f, 0.0f, 1.0f), (float)(M_PI)*0.25f));
-		setVelocityOf(1, Vec3(0.0f, -0.1f, 0.05f));
+		//addRigidBody(Vec3(0.0f, 0.2f, 0.0f), Vec3(0.4f, 0.2f, 0.2f), 100.0);
+		//setOrientationOf(1, Quat(Vec3(0.0f, 0.0f, 1.0f), (float)(M_PI)*0.25f));
+		//setVelocityOf(1, Vec3(0.0f, -0.1f, 0.05f));
 
-		applyForceOnBody(0, Vec3(0.0, 0.0f, 0.0), Vec3(0, 0, 200));
+		applyForceOnBody(0, Vec3(0.3f, 0.5f, 0.25f), Vec3(1, 1, 0));
 	}
 }
 
@@ -67,9 +68,10 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep) {
 		}
 
 		// 3. Euler Step for center of mass position and velosity
-		currentRigidBody.position = currentRigidBody.position + (timeStep * currentRigidBody.linearVelocity);
+		currentRigidBody.position += (timeStep * currentRigidBody.linearVelocity);
 		currentRigidBody.linearVelocity += timeStep * sumOfForcesVectors / currentRigidBody.mass;
 
+		
 		// 4. Update quaternion
 		Quat angularVelocity = Quat();
 		angularVelocity.x = currentRigidBody.angularVelocity.x * currentRigidBody.orientation.x;
@@ -102,7 +104,7 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep) {
 			}
 			currentRigidBody.angularVelocity[i] = -result;
 		}
-
+		
 		m_pRigidBodySystem->rigidBodies[i] = currentRigidBody;
 	}
 }

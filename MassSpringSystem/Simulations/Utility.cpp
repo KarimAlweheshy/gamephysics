@@ -59,3 +59,19 @@ vector<vector<float>> Utility::threeDMatrixFromMat4(Mat4 matrix) {
 
 	return result;
 }
+
+Vec3 Utility::MatrixVectorProduct3D(vector<Vec3> matrix, Vec3 vector)
+{
+	Vec3 result;
+
+	result[0] = matrix[0][0] * vector[0] + matrix[0][1] * vector[1] + matrix[0][2] * vector[2];
+	result[1] = matrix[1][0] * vector[0] + matrix[1][1] * vector[1] + matrix[1][2] * vector[2];
+	result[2] = matrix[2][0] * vector[0] + matrix[2][1] * vector[1] + matrix[2][2] * vector[2];
+
+	return result;
+}
+
+float Utility::scalarProduct(Vec3 a, Vec3 b)
+{
+	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}

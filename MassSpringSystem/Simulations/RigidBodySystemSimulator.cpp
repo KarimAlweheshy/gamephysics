@@ -1,4 +1,6 @@
-#include "RigidBodySystemSimulator.h"
+﻿#include "RigidBodySystemSimulator.h"
+#include "Utility.h"
+#include "collisionDetect.h"
 
 // Construtors
 RigidBodySystemSimulator::RigidBodySystemSimulator() {
@@ -37,11 +39,11 @@ void RigidBodySystemSimulator::notifyCaseChanged(int testCase) {
 		addRigidBody(Vec3(0.f, 0.f, 0.f), Vec3(1.f, 0.6f, 0.5f), 2.0f);
 		setOrientationOf(0, Quat(Vec3(0.0f, 0.0f, 1.0f), (float)(M_PI)*0.5f));
 
-		//addRigidBody(Vec3(0.0f, 0.2f, 0.0f), Vec3(0.4f, 0.2f, 0.2f), 100.0);
-		//setOrientationOf(1, Quat(Vec3(0.0f, 0.0f, 1.0f), (float)(M_PI)*0.25f));
+		addRigidBody(Vec3(2.f, 3.f, 0.0f), Vec3(0.7f, 0.4f, 0.3f), 2.0f);
 		//setVelocityOf(1, Vec3(0.0f, -0.1f, 0.05f));
 
 		applyForceOnBody(0, Vec3(0.3f, 0.5f, 0.25f), Vec3(1, 1, 0));
+		//applyForceOnBody(1, Vec3(0, -0.5f, 0), Vec3(1, 1, 0));
 	}
 }
 
@@ -71,7 +73,7 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep) {
 		currentRigidBody.position += (timeStep * currentRigidBody.linearVelocity);
 		currentRigidBody.linearVelocity += timeStep * sumOfForcesVectors / currentRigidBody.mass;
 
-		
+
 		// 4. Update quaternion
 		Quat angularVelocity = Quat();
 		angularVelocity.x = currentRigidBody.angularVelocity.x * currentRigidBody.orientation.x;
@@ -83,6 +85,7 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep) {
 		currentRigidBody.torque = currentRigidBody.torque + (timeStep * q);
 
 		// 6. Get inverse current inertia tensor
+		/*
 		vector<vector<float>> currentTensor = currentRigidBody.currentInverseTensor();
 		vector<vector<float>> inverseCurrentTensor = vector<vector<float>>();
 		vector<float> firstRow = vector<float>(3);
@@ -103,8 +106,12 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep) {
 				result += inverseCurrentTensor[i][j] * currentRigidBody.torque[j];
 			}
 			currentRigidBody.angularVelocity[i] = -result;
-		}
-		
+		}				*/
+
+
+		currentRigidBody.angularVelocity -= Utility::MatrixVectorProduct3D(currentRigidBody.getTensorInWorldspace(), currentRigidBody.torque);
+		checkCollisions();
+
 		m_pRigidBodySystem->rigidBodies[i] = currentRigidBody;
 	}
 }
@@ -148,4 +155,22 @@ void RigidBodySystemSimulator::setOrientationOf(int i, Quat orientation) {
 
 void RigidBodySystemSimulator::setVelocityOf(int i, Vec3 velocity) {
 	m_pRigidBodySystem->setVelocityOf(i, velocity);
+}
+
+void RigidBodySystemSimulator::checkCollisions()
+{
+	CollisionInfo info = checkCollisionSAT(m_pRigidBodySystem->rigidBodies[0].getObjectToWorld(), m_pRigidBodySystem->rigidBodies[1].getObjectToWorld());
+
+	// collision detected
+	if (info.isValid == 1)
+	{
+		// math formula for reflection along n: r = d−2(d⋅n)n
+		Vec3 n = Utility::getNormalizedVector(info.normalWorld);
+		Vec3 d = m_pRigidBodySystem->rigidBodies[0].linearVelocity;
+		m_pRigidBodySystem->rigidBodies[0].linearVelocity = d - 2 * (Utility::scalarProduct(d, n))*n;
+		
+		n *= -1;
+		d = m_pRigidBodySystem->rigidBodies[1].linearVelocity;
+		m_pRigidBodySystem->rigidBodies[1].linearVelocity = d - 2 * (Utility::scalarProduct(d, n))*n;
+	}
 }

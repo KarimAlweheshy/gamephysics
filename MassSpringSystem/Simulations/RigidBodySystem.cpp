@@ -42,14 +42,6 @@ vector<ForceOnRigidBody> RigidBodySystem::forcesOnRigidBodyWithIndex(int index) 
 }
 
 Mat4 RigidBodySystem::objectToWorld(int i) {
-	RigidBody rigidBody = rigidBodies[i];
-
-	Mat4 translationMatrix = Mat4(rigidBody.size.x, 0, 0, 0,
-								  0, rigidBody.size.y, 0, 0, 
-								  0, 0, rigidBody.size.z, 0, 
-								  rigidBody.position.x, rigidBody.position.y, rigidBody.position.z, 1);
-
-	Mat4 rotationMatrix = rigidBody.orientation.getRotMat();
-
-	return translationMatrix * rotationMatrix;
+	
+	return rigidBodies[i].getObjectToWorld();
 }

@@ -1,5 +1,6 @@
 ﻿// header file:
 #include <DirectXMath.h>
+#include "Simulator.h"
 #include <Vector>
 using namespace DirectX;
 

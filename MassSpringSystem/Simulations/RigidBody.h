@@ -8,6 +8,8 @@ public:
 	//Constructor
 	RigidBody(Vec3 position, Vec3 size, float mass);
 	vector<vector<float>> currentInverseTensor();
+	vector<Vec3> getTensorInWorldspace();
+	Mat4 getObjectToWorld();
 
 	//Attributes
 	Vec3 position;
@@ -18,9 +20,12 @@ public:
 	Vec3 linearVelocity;
 	Vec3 torque;
 
+
 private:
-	vector<vector<float>> tensor;
+	vector<Vec3> tensor;
 	vector<vector<float>> inertiaTensor();
+
+	void calculateTensor();
 };
 
 #endif

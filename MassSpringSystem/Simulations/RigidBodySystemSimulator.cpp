@@ -168,9 +168,11 @@ void RigidBodySystemSimulator::checkCollisions()
 		Vec3 n = Utility::getNormalizedVector(info.normalWorld);
 		Vec3 d = m_pRigidBodySystem->rigidBodies[0].linearVelocity;
 		m_pRigidBodySystem->rigidBodies[0].linearVelocity = d - 2 * (Utility::scalarProduct(d, n))*n;
-		
+		applyForceOnBody(0, info.collisionPointWorld, m_pRigidBodySystem->rigidBodies[0].mass*n);
+
 		n *= -1;
 		d = m_pRigidBodySystem->rigidBodies[1].linearVelocity;
 		m_pRigidBodySystem->rigidBodies[1].linearVelocity = d - 2 * (Utility::scalarProduct(d, n))*n;
+		applyForceOnBody(1, info.collisionPointWorld, m_pRigidBodySystem->rigidBodies[1].mass*n);
 	}
 }

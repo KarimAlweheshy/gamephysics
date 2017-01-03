@@ -1,4 +1,6 @@
 #include "Utility.h"
+#include <ctime>
+#include <cstdlib>
 
 float Utility::getVectorLength(Vec3 vector)
 {
@@ -74,4 +76,12 @@ Vec3 Utility::MatrixVectorProduct3D(vector<Vec3> matrix, Vec3 vector)
 float Utility::scalarProduct(Vec3 a, Vec3 b)
 {
 	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+float Utility::getRandomFloat(float a, float b)
+{
+	float random = ((float)rand()) / (float)RAND_MAX;
+	float diff = b - a;
+	float r = random * diff;
+	return a + r;
 }

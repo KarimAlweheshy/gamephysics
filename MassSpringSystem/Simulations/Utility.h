@@ -13,6 +13,7 @@ public:
 	static float scalarProduct(Vec3 a, Vec3 b);
 	static vector<vector<float>> threeDMatrixFromMat4(Mat4 matrix);
 	static Vec3 MatrixVectorProduct3D(vector<Vec3> matrix, Vec3 vector);
+	static float getVectorDistance(Vec3 vec1, Vec3 vec2);
 
 	//http://stackoverflow.com/a/5289624
 	static float getRandomFloat(float a, float b);

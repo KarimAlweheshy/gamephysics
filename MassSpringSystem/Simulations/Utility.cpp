@@ -85,3 +85,8 @@ float Utility::getRandomFloat(float a, float b)
 	float r = random * diff;
 	return a + r;
 }
+
+float Utility::getVectorDistance(Vec3 vec1, Vec3 vec2)
+{
+	return getVectorLength(vec2 - vec1);
+}

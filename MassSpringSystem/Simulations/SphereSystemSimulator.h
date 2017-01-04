@@ -32,6 +32,7 @@ protected:
 	float m_fRadius;
 	float m_fForceScaling;
 	float m_fDamping;
+	float m_fTimestep;
 	Vec3 m_fGravity;
 	int   m_iNumSpheres;
 	
@@ -53,8 +54,9 @@ protected:
 	vector<SphereSystem> sphereSystems;
 
 	void addSphereSystem(int n_Spheres, collisionType type);
-	void checkCollisions(vector<Sphere> * spheres);
+	void checkCollisions(SphereSystem * sphereSystem);
 	void checkBoundingBoxCollision(Sphere *	sphere);
+	void naiveCollision(SphereSystem * system);
 	vector<Sphere> eulerStepCalculation(vector<Sphere> spheres, float timeStep);
 	vector<Sphere> midpointCalculations(vector<Sphere> oldSpheres, vector<Sphere> midpointSpheres, float timeStep);
 	vector<Vec3>  calculateAccelerations(vector<Sphere> spheres);
@@ -63,7 +65,7 @@ protected:
 	// you will need multiple SphereSystem objects to do comparisons in Demo 3
 	// m_iAccelerator should be ignored.
 	// SphereSystem * m_pSphereSystemGrid; 
-
+	
 };
 
 #endif

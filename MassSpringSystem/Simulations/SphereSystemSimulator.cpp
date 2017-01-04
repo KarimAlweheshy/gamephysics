@@ -15,6 +15,7 @@ SphereSystemSimulator::SphereSystemSimulator()
 	m_fRadius = 0.005f;
 	m_fMass = 0.1f;
 	m_fGravity = Vec3(0.0f, -4.81f, 0.0f);
+	m_fDamping = 0.75;
 }
 
 const char * SphereSystemSimulator::getTestCasesStr(){
@@ -66,9 +67,11 @@ void SphereSystemSimulator::externalForcesCalculations(float timeElapsed)
 
 void SphereSystemSimulator::simulateTimestep(float timeStep)
 {
+	m_fTimestep = timeStep;
+
 	for (int i = 0; i < sphereSystems.size(); i++)
 	{
-		checkCollisions(&sphereSystems[i].spheres);
+		checkCollisions(&sphereSystems[i]);
 		vector<Sphere> halfstepSpheres = eulerStepCalculation(sphereSystems[i].spheres, timeStep / 2);
 		sphereSystems[i].spheres = midpointCalculations(sphereSystems[i].spheres, halfstepSpheres, timeStep);
 	}
@@ -151,14 +154,12 @@ vector<Vec3> SphereSystemSimulator::calculateAccelerations(vector<Sphere> sphere
 	return accelerations;
 }
 
-void SphereSystemSimulator::checkCollisions(vector<Sphere> * spheres)
+void SphereSystemSimulator::checkCollisions(SphereSystem * sphereSystem)
 {
-	for (int i = 0; i < spheres->size(); i++)
-		checkBoundingBoxCollision(&spheres->at(i));
-
-	/*switch (system.type)
+	switch (sphereSystem->type)
 	{
 	case collisionType::NAIVE:
+		naiveCollision(sphereSystem);
 		break;
 
 	case collisionType::KD_TREE:
@@ -166,7 +167,7 @@ void SphereSystemSimulator::checkCollisions(vector<Sphere> * spheres)
 
 	case collisionType::GRID:
 		break;
-	}*/
+	}
 }
 
 void SphereSystemSimulator::checkBoundingBoxCollision(Sphere * sphere)
@@ -175,16 +176,42 @@ void SphereSystemSimulator::checkBoundingBoxCollision(Sphere * sphere)
 	{
 		if (sphere->_Position[i] <= -0.5)
 		{
-			sphere->_Position[i] = -0.49;
+			float distance = 
+			//sphere->_Position[i] = -0.49;
 			sphere->_Velocity[i] *= -1;
-			//cout << "Pos: " << sphere._Position[i] << "| Vel: " << sphere._Velocity[i] << endl;
 		}
 		else if (sphere->_Position[i] >= 0.5)
 		{
-			sphere->_Position[i] = 0.49;
+			//sphere->_Position[i] = 0.49;
 			sphere->_Velocity[i] *= -1;
 		}
 
 	}
+}
 
+void SphereSystemSimulator::naiveCollision(SphereSystem * system)
+{
+	for (int i = 0; i < system->spheres.size(); i++)
+	{
+		for (int j = 0; j < system->spheres.size(); j++)
+		{
+			// skip collision detection for current sphere
+			if (i == j)
+				continue;
+
+			// check bounding box collisions
+			checkBoundingBoxCollision(&system->spheres[i]);
+
+			float distance = Utility::getVectorDistance(system->spheres[i]._Position, system->spheres[j]._Position);
+			//if(collision i & j) -> add acceleration to i (j will be taken care of in its own loop)
+			if (distance <= m_fRadius)
+			{
+				// j - i to get the direction of force for i
+				Vec3 direction = Utility::getNormalizedVector(system->spheres[j]._Position - system->spheres[i]._Position);
+				float force = (1.0f - distance / (2 * m_fRadius));
+				Vec3 acceleration = force / m_fMass*direction;
+				system->spheres[i]._Velocity += (m_fTimestep * acceleration);
+			}
+		}
+	}
 }

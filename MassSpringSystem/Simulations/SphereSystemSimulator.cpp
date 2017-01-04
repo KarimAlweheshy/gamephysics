@@ -50,7 +50,7 @@ void SphereSystemSimulator::notifyCaseChanged(int testCase)
 	switch (testCase)
 	{
 	case 0:
-		addSphereSystem(10, collisionType::NAIVE);
+		addSphereSystem(100, collisionType::NAIVE);
 		break;
 	case 1:
 		break;
@@ -68,7 +68,7 @@ void SphereSystemSimulator::simulateTimestep(float timeStep)
 {
 	for (int i = 0; i < sphereSystems.size(); i++)
 	{
-		checkCollisions(sphereSystems[i].spheres);
+		checkCollisions(&sphereSystems[i].spheres);
 		vector<Sphere> halfstepSpheres = eulerStepCalculation(sphereSystems[i].spheres, timeStep / 2);
 		sphereSystems[i].spheres = midpointCalculations(sphereSystems[i].spheres, halfstepSpheres, timeStep);
 	}
@@ -151,10 +151,10 @@ vector<Vec3> SphereSystemSimulator::calculateAccelerations(vector<Sphere> sphere
 	return accelerations;
 }
 
-void SphereSystemSimulator::checkCollisions(vector<Sphere> spheres)
+void SphereSystemSimulator::checkCollisions(vector<Sphere> * spheres)
 {
-	for (int i = 0; i < spheres.size(); i++)
-		checkBoundingBoxCollision(&spheres[i]);
+	for (int i = 0; i < spheres->size(); i++)
+		checkBoundingBoxCollision(&spheres->at(i));
 
 	/*switch (system.type)
 	{
@@ -169,20 +169,22 @@ void SphereSystemSimulator::checkCollisions(vector<Sphere> spheres)
 	}*/
 }
 
-void SphereSystemSimulator::checkBoundingBoxCollision(Sphere* sphere)
+void SphereSystemSimulator::checkBoundingBoxCollision(Sphere * sphere)
 {
 	for (int i = 0; i < 3; i++)
 	{
 		if (sphere->_Position[i] <= -0.5)
 		{
-			cout << "collision detected in " << i+1 << ". axis." << endl;
 			sphere->_Position[i] = -0.49;
-			sphere->_Velocity[i] = -sphere->_Velocity[i];
+			sphere->_Velocity[i] *= -1;
+			//cout << "Pos: " << sphere._Position[i] << "| Vel: " << sphere._Velocity[i] << endl;
 		}
 		else if (sphere->_Position[i] >= 0.5)
 		{
 			sphere->_Position[i] = 0.49;
-			sphere->_Velocity[i] = -sphere->_Velocity[i];
+			sphere->_Velocity[i] *= -1;
 		}
+
 	}
+
 }

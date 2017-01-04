@@ -53,8 +53,8 @@ protected:
 	vector<SphereSystem> sphereSystems;
 
 	void addSphereSystem(int n_Spheres, collisionType type);
-	void checkCollisions(vector<Sphere> spheres);
-	void checkBoundingBoxCollision(Sphere* sphere);
+	void checkCollisions(vector<Sphere> * spheres);
+	void checkBoundingBoxCollision(Sphere *	sphere);
 	vector<Sphere> eulerStepCalculation(vector<Sphere> spheres, float timeStep);
 	vector<Sphere> midpointCalculations(vector<Sphere> oldSpheres, vector<Sphere> midpointSpheres, float timeStep);
 	vector<Vec3>  calculateAccelerations(vector<Sphere> spheres);

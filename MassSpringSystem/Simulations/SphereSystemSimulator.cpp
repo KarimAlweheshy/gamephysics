@@ -14,7 +14,7 @@ SphereSystemSimulator::SphereSystemSimulator()
 {
 	m_fRadius = 0.005f;
 	m_fMass = 0.1f;
-	m_fGravity = Vec3(0.0f, -4.81f, 0.0f);
+	m_fGravity = Vec3(0.0f, -9.81f, 0.0f);
 	m_fDamping = 0.75;
 }
 
@@ -71,9 +71,9 @@ void SphereSystemSimulator::simulateTimestep(float timeStep)
 
 	for (int i = 0; i < sphereSystems.size(); i++)
 	{
-		checkCollisions(&sphereSystems[i]);
-		vector<Sphere> halfstepSpheres = eulerStepCalculation(sphereSystems[i].spheres, timeStep / 2);
-		sphereSystems[i].spheres = midpointCalculations(sphereSystems[i].spheres, halfstepSpheres, timeStep);
+		SphereSystem oldSystem = sphereSystems[i];
+		eulerStepCalculation(i, timeStep / 2);
+		midpointCalculations(&oldSystem, i, timeStep);
 	}
 }
 
@@ -108,58 +108,48 @@ void SphereSystemSimulator::addSphereSystem(int n_Spheres, collisionType type)
 	sphereSystems.push_back(system);
 }
 
-vector<Sphere> SphereSystemSimulator::eulerStepCalculation(vector<Sphere> spheres, float timeStep)
+void SphereSystemSimulator::eulerStepCalculation(int i_SphereSystem, float timeStep)
 {
-	vector<Sphere> tmpSpheres = spheres;
-	vector<Vec3> accelerations = calculateAccelerations(spheres);
+	vector<Vec3> accelerations = calculateAccelerations(i_SphereSystem, true);
 
-	for (int i = 0; i < spheres.size(); i++)
-	{
-		tmpSpheres[i].integratePositions(timeStep);
-	}
+	for (int i = 0; i < sphereSystems[i_SphereSystem].spheres.size(); i++)
+		sphereSystems[i_SphereSystem].spheres[i].integratePositions(timeStep);
 
-	for (int i = 0; i < spheres.size(); i++)
-	{
-		tmpSpheres[i].integrateVelocity(timeStep, accelerations[i]);
-	}
-
-	return tmpSpheres;
+	for (int i = 0; i < sphereSystems[i_SphereSystem].spheres.size(); i++)
+		sphereSystems[i_SphereSystem].spheres[i].integrateVelocity(timeStep, accelerations[i]);
 }
 
-vector<Sphere> SphereSystemSimulator::midpointCalculations(vector<Sphere> oldSpheres, vector<Sphere> midpointSpheres, float timeStep)
+void SphereSystemSimulator::midpointCalculations(SphereSystem * old_System, int i_MidpointSystem, float timeStep)
 {
-	vector<Sphere> newSpheres = oldSpheres;
-	vector<Vec3> midPointAccelerations = calculateAccelerations(midpointSpheres);
+	vector<Vec3> midPointAccelerations = calculateAccelerations(i_MidpointSystem, true);
 
-	for (int i = 0; i < oldSpheres.size(); i++)
-	{
-		newSpheres[i]._Position = oldSpheres[i]._Position + (timeStep * midpointSpheres[i]._Velocity);
-	}
+	for (int i = 0; i < sphereSystems[i_MidpointSystem].spheres.size(); i++)
+		sphereSystems[i_MidpointSystem].spheres[i]._Position = old_System->spheres[i]._Position + (timeStep * sphereSystems[i_MidpointSystem].spheres[i]._Velocity);
 
-	for (int i = 0; i < oldSpheres.size(); i++)
-	{
-		newSpheres[i]._Velocity = oldSpheres[i]._Velocity + (timeStep * midPointAccelerations[i]);
-	}
+	for (int i = 0; i < sphereSystems[i_MidpointSystem].spheres.size(); i++)
+		sphereSystems[i_MidpointSystem].spheres[i]._Velocity = old_System->spheres[i]._Velocity + (timeStep * midPointAccelerations[i]);
 
-	return newSpheres;
 }
 
-vector<Vec3> SphereSystemSimulator::calculateAccelerations(vector<Sphere> spheres)
+vector<Vec3> SphereSystemSimulator::calculateAccelerations(int i_SphereSystem, bool withCollisions)
 {
 	vector<Vec3> accelerations;
-	
-	for (int i = 0; i < spheres.size(); i++)
+
+	for (int i = 0; i < sphereSystems[i_SphereSystem].spheres.size(); i++)
 		accelerations.push_back(m_fGravity);
+
+	if (withCollisions)
+		checkCollisions(i_SphereSystem, &accelerations);
 
 	return accelerations;
 }
 
-void SphereSystemSimulator::checkCollisions(SphereSystem * sphereSystem)
+void SphereSystemSimulator::checkCollisions(int i_SphereSystem, vector<Vec3> * accelerations)
 {
-	switch (sphereSystem->type)
+	switch (sphereSystems[i_SphereSystem].type)
 	{
 	case collisionType::NAIVE:
-		naiveCollision(sphereSystem);
+		naiveCollision(i_SphereSystem, accelerations);
 		break;
 
 	case collisionType::KD_TREE:
@@ -170,47 +160,53 @@ void SphereSystemSimulator::checkCollisions(SphereSystem * sphereSystem)
 	}
 }
 
-void SphereSystemSimulator::checkBoundingBoxCollision(Sphere * sphere)
+/*
+ Summary: Bounding Box = Magnetic Field
+
+ Tested several different approaches. Just reversing the velocity along 1 axis does not work when the collision detection is done in the acceleration
+ calculation -> the sphere will just fluctuate around the border. Using a velocity-based acceleration leads to instable results. The workarund that 
+ was chosen with a large, static acceleration works somewhat like a magnetic field.
+*/
+Vec3 SphereSystemSimulator::checkBoundingBoxCollision(Sphere * sphere)
 {
+	Vec3 acceleration(0, 0, 0);
+
 	for (int i = 0; i < 3; i++)
 	{
 		if (sphere->_Position[i] <= -0.5)
-		{
-			float distance = 
-			//sphere->_Position[i] = -0.49;
-			sphere->_Velocity[i] *= -1;
-		}
+			acceleration[i] = 75;
 		else if (sphere->_Position[i] >= 0.5)
-		{
-			//sphere->_Position[i] = 0.49;
-			sphere->_Velocity[i] *= -1;
-		}
-
+			acceleration[i] = -75;
 	}
+
+	return acceleration;
 }
 
-void SphereSystemSimulator::naiveCollision(SphereSystem * system)
+/*
+ Test every sphere against every other sphere (in the same system)
+*/
+void SphereSystemSimulator::naiveCollision(int i_SphereSystem, vector<Vec3> * accelerations)
 {
-	for (int i = 0; i < system->spheres.size(); i++)
+	for (int i = 0; i < sphereSystems[i_SphereSystem].spheres.size(); i++)
 	{
-		for (int j = 0; j < system->spheres.size(); j++)
+		// check bounding box collisions
+		accelerations->at(i) += checkBoundingBoxCollision(&sphereSystems[i_SphereSystem].spheres[i]);
+
+		for (int j = 0; j < sphereSystems[i_SphereSystem].spheres.size(); j++)
 		{
 			// skip collision detection for current sphere
 			if (i == j)
 				continue;
 
-			// check bounding box collisions
-			checkBoundingBoxCollision(&system->spheres[i]);
-
-			float distance = Utility::getVectorDistance(system->spheres[i]._Position, system->spheres[j]._Position);
+			float distance = Utility::getVectorDistance(sphereSystems[i_SphereSystem].spheres[i]._Position, sphereSystems[i_SphereSystem].spheres[j]._Position);
 			//if(collision i & j) -> add acceleration to i (j will be taken care of in its own loop)
 			if (distance <= m_fRadius)
 			{
+				cout << "collision detected" << endl;
 				// j - i to get the direction of force for i
-				Vec3 direction = Utility::getNormalizedVector(system->spheres[j]._Position - system->spheres[i]._Position);
+				Vec3 direction = Utility::getNormalizedVector(sphereSystems[i_SphereSystem].spheres[j]._Position - sphereSystems[i_SphereSystem].spheres[i]._Position);
 				float force = (1.0f - distance / (2 * m_fRadius));
-				Vec3 acceleration = force / m_fMass*direction;
-				system->spheres[i]._Velocity += (m_fTimestep * acceleration);
+				accelerations->at(i) += force / m_fMass*direction;
 			}
 		}
 	}

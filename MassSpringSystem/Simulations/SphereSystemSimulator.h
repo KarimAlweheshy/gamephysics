@@ -54,12 +54,12 @@ protected:
 	vector<SphereSystem> sphereSystems;
 
 	void addSphereSystem(int n_Spheres, collisionType type);
-	void checkCollisions(SphereSystem * sphereSystem);
-	void checkBoundingBoxCollision(Sphere *	sphere);
-	void naiveCollision(SphereSystem * system);
-	vector<Sphere> eulerStepCalculation(vector<Sphere> spheres, float timeStep);
-	vector<Sphere> midpointCalculations(vector<Sphere> oldSpheres, vector<Sphere> midpointSpheres, float timeStep);
-	vector<Vec3>  calculateAccelerations(vector<Sphere> spheres);
+	void checkCollisions(int i_SphereSystem, vector<Vec3> * accelerations);
+	Vec3 checkBoundingBoxCollision(Sphere *	sphere);
+	void naiveCollision(int i_SphereSystem, vector<Vec3> * accelerations);
+	void eulerStepCalculation(int i_SphereSystem, float timeStep);
+	void midpointCalculations(SphereSystem * old_System, int i_MidpointSystem, float timeStep);
+	vector<Vec3>  calculateAccelerations(int i_SphereSystem, bool withCollisions);
 	//SphereSystem * m_pSphereSystem; // add your own sphere system member!
 	// for Demo 3 only:
 	// you will need multiple SphereSystem objects to do comparisons in Demo 3

@@ -34,7 +34,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -228,6 +228,8 @@
     <ClCompile Include="RigidBody.cpp" />
     <ClCompile Include="RigidBodySystem.cpp" />
     <ClCompile Include="RigidBodySystemSimulator.cpp" />
+    <ClCompile Include="Sphere.cpp" />
+    <ClCompile Include="SphereSystemSimulator.cpp" />
     <ClCompile Include="TemplateSimulator.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="util\FFmpeg.cpp" />
@@ -242,6 +244,8 @@
     <ClInclude Include="RigidBodySystem.h" />
     <ClInclude Include="RigidBodySystemSimulator.h" />
     <ClInclude Include="Simulator.h" />
+    <ClInclude Include="Sphere.h" />
+    <ClInclude Include="SphereSystemSimulator.h" />
     <ClInclude Include="TemplateSimulator.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="util\FFmpeg.h" />

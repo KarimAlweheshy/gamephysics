@@ -48,12 +48,14 @@ void SphereSystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext)
 
 void SphereSystemSimulator::notifyCaseChanged(int testCase) 
 {
+	// could be changed to acceleration = 1/(m*d²)for realism
 	switch (testCase)
 	{
 	case 0:
 		addSphereSystem(100, collisionType::NAIVE);
 		break;
 	case 1:
+		addSphereSystem(100, collisionType::GRID);
 		break;
 	case 2: break;
 
@@ -202,7 +204,6 @@ void SphereSystemSimulator::naiveCollision(int i_SphereSystem, vector<Vec3> * ac
 			//if(collision i & j) -> add acceleration to i (j will be taken care of in its own loop)
 			if (distance <= m_fRadius)
 			{
-				cout << "collision detected" << endl;
 				// j - i to get the direction of force for i
 				Vec3 direction = Utility::getNormalizedVector(sphereSystems[i_SphereSystem].spheres[j]._Position - sphereSystems[i_SphereSystem].spheres[i]._Position);
 				float force = (1.0f - distance / (2 * m_fRadius));
@@ -210,4 +211,12 @@ void SphereSystemSimulator::naiveCollision(int i_SphereSystem, vector<Vec3> * ac
 			}
 		}
 	}
+}
+
+void SphereSystemSimulator::gridCollision(int i_SphereSystem, vector<Vec3> * accelerations)
+{
+	/*
+	 1. Get index matrix from UniformGrid (not finished)
+	 2. Calculate collisions according to index matrix
+	*/
 }

@@ -2,7 +2,10 @@
 #define SPHSYSTEMSIMULATOR_h
 #include "Simulator.h"
 //#include "spheresystem.h", add your sphere system header file
+#include "SphereSystem.h"
 #include "Sphere.h"
+#include "UniformGrid.h"
+#include "config.h"
 
 #define NAIVEACC 0
 #define GRIDACC 1
@@ -33,32 +36,23 @@ protected:
 	float m_fForceScaling;
 	float m_fDamping;
 	float m_fTimestep;
-	Vec3 m_fGravity;
+	Vec3  m_fGravity;
 	int   m_iNumSpheres;
 	
 	int   m_iKernel; // index of the m_Kernels[5], more detials in SphereSystemSimulator.cpp
 	static std::function<float(float)> m_Kernels[5];
 	
 	int   m_iAccelerator; // switch between NAIVEACC and GRIDACC, (optionally, KDTREEACC, 2)
-	
-	enum collisionType{NAIVE, KD_TREE, GRID};
-
-	struct SphereSystem {
-	public:
-		vector<Sphere> spheres;
-		Vec3 externalForce;
-		collisionType type;
-		Vec3 color;
-	};
 
 	vector<SphereSystem> sphereSystems;
 
 	void addSphereSystem(int n_Spheres, collisionType type);
 	void checkCollisions(int i_SphereSystem, vector<Vec3> * accelerations);
-	Vec3 checkBoundingBoxCollision(Sphere *	sphere);
 	void naiveCollision(int i_SphereSystem, vector<Vec3> * accelerations);
+	void gridCollision(int i_SphereSystem, vector<Vec3> * accelerations);
 	void eulerStepCalculation(int i_SphereSystem, float timeStep);
 	void midpointCalculations(SphereSystem * old_System, int i_MidpointSystem, float timeStep);
+	Vec3 checkBoundingBoxCollision(Sphere *	sphere);
 	vector<Vec3>  calculateAccelerations(int i_SphereSystem, bool withCollisions);
 	//SphereSystem * m_pSphereSystem; // add your own sphere system member!
 	// for Demo 3 only:

@@ -158,6 +158,7 @@ void SphereSystemSimulator::checkCollisions(int i_SphereSystem, vector<Vec3> * a
 		break;
 
 	case collisionType::GRID:
+		gridCollision(i_SphereSystem, accelerations);
 		break;
 	}
 }
@@ -175,10 +176,15 @@ Vec3 SphereSystemSimulator::checkBoundingBoxCollision(Sphere * sphere)
 
 	for (int i = 0; i < 3; i++)
 	{
+		float distance = abs(sphere->_Position[i]) - 0.5;
 		if (sphere->_Position[i] <= -0.5)
-			acceleration[i] = 75;
+		{	
+			acceleration[i] = 80;
+		}
 		else if (sphere->_Position[i] >= 0.5)
-			acceleration[i] = -75;
+		{
+			acceleration[i] = -85;
+		}
 	}
 
 	return acceleration;
@@ -219,4 +225,24 @@ void SphereSystemSimulator::gridCollision(int i_SphereSystem, vector<Vec3> * acc
 	 1. Get index matrix from UniformGrid (not finished)
 	 2. Calculate collisions according to index matrix
 	*/
+	
+	// size = 1.4 to take fuzzy edges into consideration
+	int size = (1.4 / (2 * m_fRadius));
+	UniformGrid grid(size,  2 * m_fRadius);
+	vector<vector<int>> indexMatrix = grid.checkGrid(sphereSystems[i_SphereSystem]);
+
+	for (int i = 0; i < sphereSystems[i_SphereSystem].spheres.size(); i++)
+	{
+		// check bounding box collisions
+		accelerations->at(i) += checkBoundingBoxCollision(&sphereSystems[i_SphereSystem].spheres[i]);
+		
+		for (int j = 0; j < indexMatrix[i].size(); j++)
+		{
+			float distance = Utility::getVectorDistance(sphereSystems[i_SphereSystem].spheres[i]._Position, sphereSystems[i_SphereSystem].spheres[indexMatrix[i][j]]._Position);
+			Vec3 direction = Utility::getNormalizedVector(sphereSystems[i_SphereSystem].spheres[indexMatrix[i][j]]._Position - sphereSystems[i_SphereSystem].spheres[i]._Position);
+			float force = (1.0f - distance / (2 * m_fRadius));
+			accelerations->at(i) += force / m_fMass*direction;
+		}
+		
+	}
 }

@@ -13,14 +13,25 @@ public:
 	 Returns an index matrix. The first entry of each row is the target sphere index, 
 	 the following row entries are collision sphere indices.
 	*/
-	vector<vector<int>> checkGrid(SphereSystem * system, gridPlane plane);
+	vector<vector<int>> checkGrid(SphereSystem& system);
 
 private:
 	int m_iSize;
 	float m_fCellSize;
-	vector<vector<vector<int>>> grid;
 
-	void fillGrid(gridPlane plane);
-	vector<int> getCurrentSphereGridPos(Sphere * sphere, gridPlane plane);
+	struct Grids
+	{
+	public:
+		vector<vector<int>> gridX;
+		vector<vector<int>> gridY;
+		vector<vector<int>> gridZ;
+	};
+
+	Grids uniformGrids;
+
+	void fillGrids(SphereSystem& system);
+	void clearGrids();
+	vector<int> getSurroundingSpheres(Sphere& currentSphere, int sphereIndex);
+	Vec3 getCurrentSphereGridPos(Sphere& sphere);
 };
 
